@@ -1,9 +1,8 @@
 # Introduction
 
-This is a book created from markdown and executable code.
+The Tampa Bay Estuary Program compiles environmental data from multiple partners to report on the status and trends of key indicators of bay health ([Monitoring and Indicators Plan](https://drive.google.com/file/d/1H8_zpDT56m6fEGDlRNbRRoE3-tHYF7lH/view)). Indicators and reporting methods currently exist for several components of the [CCMP](https://indd.adobe.com/view/cf7b3c48-d2b2-4713-921c-c2a0d4466632), including water quality, benthic and sediment condition, fish communities, seagrasses, and tidal creeks. Open-source methods have been developed using the [tbeptools](https://tbep-tech.github.io/tbeptools) R package [@beck2021a] that facilitates data synthesis and routine reporting for each of these indicators.
 
-See @knuth84 for additional discussion of literate programming.
+Additional indicators of bay health will complement the existing set of indicators. Key indicators currently missing from TBEP routine reporting products include those related to climate change.  The Tampa Bay Regional Planning Council has produced the [Regional Resilience Action Plan](https://tbrpc.org/resiliency-planning/rrap/) (RRAP) to assist local governments and municipalities in planning resilience activities in response to climate change.  Fundamental to these activities is the identification of robust indicators of the local effects of climate change.  These may include data descriptive of sea-level rise, droughts, heat waves, or storm frequency/intensity.  The TBEP is supportive of these efforts and intends to identify several climate change indicators that can be operationalized for routine reporting, either through conventional summary graphics or more interactive web-based platforms.
 
-```{r}
-1 + 1
-```
+\
+This project will identify appropriate climate change indicators to support the TBEP and its partners in making informed planning decisions.  Although the primary goal of TBEP is the management of bay health, these indicators could also be used to support community resilience planning as described in the RRAP.  Appropriate data sources will be identified, with emphasis on those that are stable and planned to be reliable sources in the future.  Identifying indicators that represent relative risk of climate change impacts will be emphasized, as opposed to indicators that simply measure change.  All project activities will leverage open science principles as described in the TBEP [Strategic Plan](https://drive.google.com/file/d/11xohuoaHDxNHRqgXoOHdI37FpWvac_rn/view?usp=sharing) [@burke2020] and [Data Management SOP](https://tbep-tech.github.io/data-management-sop/) [@beck2021b].

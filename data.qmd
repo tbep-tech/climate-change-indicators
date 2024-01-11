@@ -1,0 +1,7 @@
+# Data
+
+## Task 1. Assessment of available data and coverage
+
+Data descriptive of the risks of climate change can be obtained from several sources. These may include weather or climatological data, long-term tidal gauge data, or in situ water measurements responsive to climate change. Weather and climatological data could be obtained from local weather stations with long-term data, e.g., Tampa International Airport, and could include measures of air temperature, precipitation, and/or storm intensity/frequency. Tidal gauge data are readily available from the NOAA PORTS data retrieval system. Lastly, in situ water measurements could include water temperature, changes in flow hydrology, salinity, and/or pH. Data used to evaluate potential risks related to ocean acidification should also be explored.
+
+The permanency and ease of access of each data source should be noted when making recommendations on indicators to operationalize. Further, indicators that communicate the risks associated with climate change are preferred, as opposed to those that simply indicate change. An example is the number of days in a year when temperature exceeds a critical threshold, as compared to temperature alone. An additional example is frequency of sunny day flooding events, as compared to tidal gauge measurements alone.
