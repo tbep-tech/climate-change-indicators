@@ -5,3 +5,230 @@
 Data descriptive of the risks of climate change can be obtained from several sources. These may include weather or climatological data, long-term tidal gauge data, or in situ water measurements responsive to climate change. Weather and climatological data could be obtained from local weather stations with long-term data, e.g., Tampa International Airport, and could include measures of air temperature, precipitation, and/or storm intensity/frequency. Tidal gauge data are readily available from the NOAA PORTS data retrieval system. Lastly, in situ water measurements could include water temperature, changes in flow hydrology, salinity, and/or pH. Data used to evaluate potential risks related to ocean acidification should also be explored.
 
 The permanency and ease of access of each data source should be noted when making recommendations on indicators to operationalize. Further, indicators that communicate the risks associated with climate change are preferred, as opposed to those that simply indicate change. An example is the number of days in a year when temperature exceeds a critical threshold, as compared to temperature alone. An additional example is frequency of sunny day flooding events, as compared to tidal gauge measurements alone.
+
+```{r}
+#| label: load-packages
+
+if (!"librarian" %in% rownames(installed.packages()))
+  install.packages("librarian")
+librarian::shelf(
+  dplyr, dygraphs, glue, here, leaflet, lubridate, sf,
+  tbep-tech/tbeptools, 
+  RColorBrewer, readr, rnoaa, terra, tidyr,
+  quiet = T)
+
+# explicitly list packages for renv::dependencies(); renv::snapshot() 
+library(dplyr)
+library(dygraphs)
+library(glue)
+library(here)
+library(leaflet)
+library(librarian)
+library(lubridate)
+library(RColorBrewer)
+library(readr)
+library(rnoaa)
+library(sf)
+library(tbeptools)
+library(terra)
+library(tidyr)
+
+options(readr.show_col_types = F)
+```
+
+## Temperature
+
+### Observed
+
+The [`rnoaa`](https://docs.ropensci.org/rnoaa/) R package uses NOAA NCDC API v2, which only goes to 2022-09-15.
+
+* [NCEI Web Services | Climate Data Online (CDO) | National Center for Environmental Information (NCEI)](https://www.ncdc.noaa.gov/cdo-web/webservices)
+
+* [Data Tools | Climate Data Online (CDO) | National Climatic Data Center (NCDC)](https://www.ncdc.noaa.gov/cdo-web/datatools)
+
+#### Weather stations
+
+* [Tampa International Airport](https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/GHCND:USW00012842/detail)
+  - Start Date:	1939-02-01
+  - End Date:	2024-01-07
+
+Got token at [ncdc.noaa.gov/cdo-web/token](https://www.ncdc.noaa.gov/cdo-web/token). Added variable `NOAA_NCDC_CDO_token` to:
+
+- locally: 
+  ```r
+  file.edit("~/.Renviron")
+  ```
+  
+- on GitHub: 
+  Repository secrets in [Actions secrets · tbep-tech/climate-change-indicators](https://github.com/tbep-tech/climate-change-indicators/settings/secrets/actions)
+  
+* [GCHN readme](https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt)
+  - `PRCP`: Precipitation (tenths of mm)
+  - `TMAX`: Maximum temperature (tenths of degrees C)
+  - `TMIN`: Minimum temperature (tenths of degrees C)
+  
+```{r}
+#| label: weather-station
+
+# provide NOAA key
+options(noaakey = Sys.getenv("NOAA_NCDC_CDO_token"))
+
+# Specify datasetid and station
+stn     <- "GHCND:USW00012842" # TAMPA INTERNATIONAL AIRPORT, FL US
+stn_csv <- here("data/tpa_ghcnd.csv")
+
+stn_meta <- ncdc_stations(
+  datasetid = "GHCND", 
+  stationid = stn)
+stn_meta$data
+
+if (!file.exists(stn_csv)){
+
+  date_beg <- stn_meta$data$mindate
+  date_end <- stn_meta$data$maxdate
+  max_rows <- 1000
+  vars     <- c("PRCP","TMIN","TMAX")
+  
+  n_vars     <- length(vars)
+  days_batch <- floor(max_rows / n_vars)
+  dates <- unique(c(
+    seq(
+      ymd(date_beg), 
+      ymd(date_end), 
+      by = glue("{days_batch} days")),
+    ymd(date_end)))
+  
+  n_i <- length(dates) - 1
+  for (i in 1:n_i){
+    # for (i in 14:n_i){
+    date_beg <- dates[i]
+    if (i == n_i){
+      date_end <- dates[i+1]
+    } else {
+      date_end <- dates[i+1] - days(1)
+    }
+    print(glue("{i} of {n_i}: {date_beg} to {date_end}  ~  {Sys.time()}"))
+    
+    # retry if get Error: Service Unavailable (HTTP 503)
+    o           <- NULL
+    attempt     <- 1
+    attempt_max <- 10
+    while (is.null(o) && attempt <= attempt_max) {
+      if (attempt > 1)
+        print(glue("  attempt {attempt}", .trim = F))
+      attempt <- attempt + 1
+      try(
+        o <- ncdc(
+          datasetid  = "GHCND", 
+          stationid  = stn, 
+          datatypeid = vars, 
+          startdate  = date_beg,
+          enddate    = date_end,
+          limit      = max_rows) )
+    }
+    
+    if (i == 1) {
+      df <- o$data
+    } else {
+      df <- rbind(df, o$data)
+    }
+  }
+  stopifnot(duplicated(df[,1:2])|> sum() == 0)
+  
+  df <- df |> 
+    mutate(
+      date     = as.Date(strptime(
+        date, "%Y-%m-%dT00:00:00")),
+      datatype = recode(
+        datatype, 
+        PRCP = "precip_mm", 
+        TMIN = "temp_c_min", 
+        TMAX = "temp_c_max"),
+      value    = value / 10) |> 
+    select(
+      -station, # station         : all "GHCND:USW00012842"
+      -fl_m,    # measurement flag: 3,524 are "T" for trace
+      -fl_t,    # time        flag: all "2400"
+      -fl_q)    # quality     flag: all ""
+  
+  write_csv(df, stn_csv)
+}
+
+d <- read_csv(stn_csv)
+
+d |> 
+  select(date, datatype, value) |>
+  filter(datatype %in% c("temp_c_min","temp_c_max")) |>
+  pivot_wider(
+    names_from  = datatype, 
+    values_from = value) |>
+  dygraph(main = "Daily Temperature (ºC)") |> 
+  dyOptions(
+    colors = brewer.pal(5, "YlOrRd")[c(5,3)]) |> 
+  dySeries("temp_c_min", label = "min") |> 
+  dySeries("temp_c_max", label = "max")
+
+d |> 
+  select(date, datatype, value) |>
+  filter(datatype %in% c("precip_mm")) |>
+  pivot_wider(
+    names_from  = datatype, 
+    values_from = value) |>
+  dygraph(main = "Daily Precipitation (mm)") |> 
+  dySeries("precip_mm", label = "precip")
+```
+
+
+#### Satellite
+
+
+## Precipitation
+
+## Sea Level Rise
+
+Sea level rise occurs from principally two sources: 1) thermal expansion; and 2) freshwater inputs from glacial melting. Data for these trends can be obtained from NOAA's [Sea Level Trends](https://tidesandcurrents.noaa.gov/sltrends/sltrends.html) (@fig-slr-noaa)
+
+Types of data:
+
+  1. Observed (past, present)
+    - tide gauge
+    - satellite, e.g. [Laboratory for Satellite Altimetry / Sea Level Rise](https://www.star.nesdis.noaa.gov/socd/lsa/SeaLevelRise/)
+      - Level-3 products distributed through NOAA CoastWatch (Sea Level Anomaly and along-track altimetry)
+  1. Projected (future). modeled
+
+### Gauges
+
+![Screenshot of NOAA's [Sea Level Trends](https://tidesandcurrents.noaa.gov/sltrends/sltrends.html) zoomed into the Tampa Bay.](figures/slr_tidesandcurrents.noaa.gov-sltrends.png){#fig-slr-noaa}
+
+* [PORTS: Tampa Bay PORTS - NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/ports/index.html?port=tb)
+
+### Satellite
+
+* [NOAA / NESDIS / STAR - Laboratory for Satellite Altimetry / Sea Level Rise](https://www.star.nesdis.noaa.gov/socd/lsa/SeaLevelRise/LSA_SLR_maps.php)
+
+```{r}
+slr_nc    <- here("data/slr/slr_map_txj1j2.nc")
+r_slr_gcs <- rast(slr_nc)  # 0.5 degree resolution
+r_slr_mer <- projectRasterForLeaflet(r_slr_gcs, method="bilinear")
+
+b <- st_bbox(tbsegshed)
+r_slr_tb_mer <- rast(slr_nc) |> 
+  crop(b) # |> 
+  # projectRasterForLeaflet(method="bilinear")
+# only one value for Tampa Bay extracted at 0.5 degree resolution
+# values(r_slr_tb_mer, mat=F, na.rm=T)  # 5.368306
+
+b <- st_bbox(tbshed)
+plet(r_slr_mer, tiles=providers$Esri.OceanBasemap) |> 
+  addProviderTiles(providers$CartoDB.DarkMatterOnlyLabels) |> 
+  addPolygons(data = tbsegshed) |>
+  fitBounds(
+    lng1 = b[["xmin"]], lat1 = b[["ymin"]], 
+    lng2 = b[["xmax"]], lat2 = b[["ymax"]])
+```
+
+## Severe Weather
+
+* [SWDI vignette • rnoaa](https://docs.ropensci.org/rnoaa/articles/swdi_vignette.html)
+
+
