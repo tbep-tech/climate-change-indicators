@@ -14,10 +14,10 @@ if (!"librarian" %in% rownames(installed.packages()))
 librarian::shelf(
   dplyr, dygraphs, glue, here, leaflet, lubridate, sf,
   tbep-tech/tbeptools, 
-  RColorBrewer, readr, rnoaa, terra, tidyr,
+  RColorBrewer, readr, rnoaa, terra, tidyr, webshot2,
   quiet = T)
 
-# explicitly list packages for renv::dependencies(); renv::snapshot() 
+# explicitly list packages for renv::dependencies(); renv::snapshot()
 library(dplyr)
 library(dygraphs)
 library(glue)
@@ -32,6 +32,7 @@ library(sf)
 library(tbeptools)
 library(terra)
 library(tidyr)
+library(webshot2)
 
 options(readr.show_col_types = F)
 ```
