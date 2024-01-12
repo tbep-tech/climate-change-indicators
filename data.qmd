@@ -68,19 +68,24 @@ Got token at [ncdc.noaa.gov/cdo-web/token](https://www.ncdc.noaa.gov/cdo-web/tok
   - `TMIN`: Minimum temperature (tenths of degrees C)
   
 ```{r}
-#| label: weather-station
+#| label: fig-weather-station
 
 # provide NOAA key
 options(noaakey = Sys.getenv("NOAA_NCDC_CDO_token"))
 
 # Specify datasetid and station
 stn     <- "GHCND:USW00012842" # TAMPA INTERNATIONAL AIRPORT, FL US
-stn_csv <- here("data/tpa_ghcnd.csv")
+stn_csv      <- here("data/tpa_ghcnd.csv")
+stn_meta_csv <- here("data/tpa_meta.csv")
 
-stn_meta <- ncdc_stations(
-  datasetid = "GHCND", 
-  stationid = stn)
-stn_meta$data
+if (!file.exists(stn_meta_csv)){
+  # cache station metadata since timeout from Github Actions
+  stn_meta <- ncdc_stations(
+    datasetid = "GHCND", 
+    stationid = stn)
+  write_csv(stn_meta$data, stn_meta_csv)
+}
+read_csv(stn_meta_csv)
 
 if (!file.exists(stn_csv)){
 
@@ -207,6 +212,8 @@ Types of data:
 * [NOAA / NESDIS / STAR - Laboratory for Satellite Altimetry / Sea Level Rise](https://www.star.nesdis.noaa.gov/socd/lsa/SeaLevelRise/LSA_SLR_maps.php)
 
 ```{r}
+#| label: fig-slr-satellite
+
 slr_nc    <- here("data/slr/slr_map_txj1j2.nc")
 r_slr_gcs <- rast(slr_nc)  # 0.5 degree resolution
 r_slr_mer <- projectRasterForLeaflet(r_slr_gcs, method="bilinear")
