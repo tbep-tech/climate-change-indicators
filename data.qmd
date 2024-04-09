@@ -206,11 +206,14 @@ Materials:
 #| eval: FALSE
 
 librarian::shelf(
-  dplyr, here, mapview, readxl, sf, tbep-tech/tbeptools)
+  dplyr, here, leaflet,
+  # mapview, 
+  readxl, sf, tbep-tech/tbeptools)
 # register with renv
 library(dplyr)
 library(here)
-library(mapview)
+library(leaflet)
+# library(mapview)
 library(readxl)
 library(sf)
 library(tbeptools)
@@ -218,7 +221,7 @@ library(tbeptools)
 # from SWFWMD grid cells, use only if interested in areas finer than TB watershed
 # this currently gets the same data as the compiled spreadsheet
 grd <- st_read(here('../tbep-os-presentations/data/swfwmd-GARR-gisfiles-utm/swfwmd_pixel_2_utm_m_83.shp'), quiet = T)
-mapView(grd)
+# mapView(grd)
 
 tbgrdcent <- grd %>%
   st_transform(crs = st_crs(tbshed)) %>%
@@ -400,15 +403,19 @@ Temporal data availability:
 #| messages: false
 #| warning: false
 
-# librarian::shelf(glue, here, lubridate, mapview, prism, stars, stringr, tbep-tech/tbeptools, terra)
+# librarian::shelf(glue, here, leaflet, lubridate, 
+# # mapview, stars, 
+# prism, sf, stringr, tbep-tech/tbeptools, terra)
 
 # renv register libraries
 library(glue)
 library(here)
+library(leaflet)
 library(lubridate)
-library(mapview)
+# library(mapview)
 library(prism)
-library(stars)
+# library(stars)
+library(sf)
 library(stringr)
 library(tbeptools)
 library(terra)
@@ -487,6 +494,7 @@ r <- pd_stack(pd) |>
 # tbshed_pd <- tbshed |> 
 tbshed_pd <- tbsegshed |> 
   st_transform(crs(r, proj=T))
+# sf broken, so Warning: Cannot find proj.db
 r_tb <- r |> 
   crop(tbshed_pd, mask = T, touches = T) |>
   trim()
@@ -502,8 +510,20 @@ lyr  <- glue("{var}<br>{period}<br>{date}")
 
 # terra::writeRaster(r_tb[[i]], here("tmp", glue("{var}_{date}.tif")), overwrite = T)
 
-mapView(r_tb[[i]], layer.name = lyr) + 
-  mapView(tbshed_pd)
+# mapView(r_tb[[i]], layer.name = lyr) +
+#   mapView(tbshed_pd)
+# sf broken, so Error: Cannot find proj.db
+
+library(leaflet)
+leaflet() |>
+  addProviderTiles(
+    providers$CartoDB.Positron) |>
+  addRasterImage(
+    r_tb[[i]], opacity = 0.7) |> 
+  addPolygons(
+    data = tbsegshed, 
+    fillOpacity = 0, 
+    color = "black", weight = 1)
 ```
 
 

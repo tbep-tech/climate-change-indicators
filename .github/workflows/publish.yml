@@ -22,6 +22,52 @@ jobs:
       # From https://github.com/rspatial/terra/blob/master/.github/workflows/pkgdown.yml
       # - name: Install spatial dependencies
       #   run: brew install gdal proj
+
+      # https://github.com/r-spatial/sf/blob/2867dd290a3692cd9f041a7b9297149ea6cffe87/README.md#macos
+      # - name: Install spatial dependencies
+      #   run: brew install pkg-config gdal
+
+
+      # remotes::install_github("r-spatial/sf", configure.args = "--with-proj-lib=$(brew --prefix)/lib/")
+
+      # PKG_CONFIG
+      # options(configure.args = list(
+      #   sf = " \
+      #   --with-gdal-lib=/opt/homebrew/opt/gdal/lib/ \
+      #   --with-sqlite3-lib=/opt/homebrew/opt/sqlite/lib/ \
+      #   --with-gdal-config=/opt/homebrew/bin/gdal-config \
+      #   --with-proj-share=/opt/homebrew/opt/proj/share/ \
+      #   --with-proj-lib=/opt/homebrew/opt/proj/lib \
+      #   --with-proj-include=/opt/homebrew/opt/proj/include/ \
+      #   --with-geos-config=/opt/homebrew/opt/geos/bin/geos-config \
+      #   --pkg-config=/opt/homebrew/bin/pkg-config"))
+      # renv::install("r-spatial/sf")
+
+      renv::install("sf@1.0-15")
+
+      Sys.setenv("PROJ_LIB"="")
+      install.packages("sf", type = "source")
+
+      install.packages("sf", type = "source", configure.args =
+'--with-gdal-lib=/opt/homebrew/opt/gdal/lib/
+--with-sqlite3-lib=/opt/homebrew/opt/sqlite/lib/
+--with-gdal-config=/opt/homebrew/bin/gdal-config
+--with-proj-share=/opt/homebrew/opt/proj/share/
+--with-proj-lib=/opt/homebrew/opt/proj/lib
+--with-proj-include=/opt/homebrew/opt/proj/include/
+--with-geos-config=/opt/homebrew/opt/geos/bin/geos-config')
+install.packages("sf", type = "source", configure.args="--with-proj-lib=/opt/homebrew/lib/")
+
+# install.packages("sf", type = "source", configure.args =
+'
+--with-gdal-lib=/opt/homebrew/opt/gdal/lib/
+--with-sqlite3-lib=/opt/homebrew/opt/sqlite/lib/
+--with-gdal-config=/opt/homebrew/bin/gdal-config
+--with-proj-share=/opt/homebrew/opt/proj/share/
+--with-proj-lib=/opt/homebrew/opt/proj/lib
+--with-proj-include=/opt/homebrew/opt/proj/include/
+--with-geos-config=/opt/homebrew/opt/geos/bin/geos-config')
+
       #
       # From https://github.com/actions/setup-python
       # - name: Setup Python
