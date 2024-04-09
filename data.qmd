@@ -400,7 +400,8 @@ Temporal data availability:
 #| messages: false
 #| warning: false
 
-librarian::shelf(glue, here, lubridate, mapview, prism, stars, stringr, tbep-tech/tbeptools, terra)
+# librarian::shelf(glue, here, lubridate, mapview, prism, stars, stringr, tbep-tech/tbeptools, terra)
+
 # renv register libraries
 library(glue)
 library(here)
@@ -455,14 +456,17 @@ prism_set_dl_dir(dir_prism)
 # > pd_tmean_day
 # [1] "PRISM_tmean_early_4kmD2_20240307_bil"       "PRISM_tmean_provisional_4kmD2_20240307_bil"
 # prism_archive_clean("tmean", "daily")  # 'cleans' the prism download data by removing early and/or provisional data if newer (provisional or stable) data also exist for the same variable and temporal period
-pd_tmean_day <- prism_archive_subset(
-  "tmean", "daily", dates = "2024-03-07")
+period <- "daily"
+var    <- "tmean"
+date   <- "2024-03-07"
+get_prism_dailys(type=var, dates=date, keepZip=F)
+pd_tmean_day <- prism_archive_subset(var, period, dates = date)
 pd_image(pd_tmean_day, col="redblue")
 
-pd_ppt_nrml <- prism_archive_subset(
-  "ppt", "monthly normals", 
-  mon = 1, resolution = "800m")
-(path_ppt_nrml <- pd_to_file(pd_ppt_nrml))
+# pd_ppt_nrml <- prism_archive_subset(
+#   "ppt", "monthly normals", 
+#   mon = 1, resolution = "800m")
+# (path_ppt_nrml <- pd_to_file(pd_ppt_nrml))
 
 # raster stack ----
 var    <- "tmean"
