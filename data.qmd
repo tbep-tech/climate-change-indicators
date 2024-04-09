@@ -39,6 +39,8 @@ options(readr.show_col_types = F)
 
 ## Temperature
 
+
+
 ### Observed
 
 The [`rnoaa`](https://docs.ropensci.org/rnoaa/) R package uses NOAA NCDC API v2, which only goes to 2022-09-15.
@@ -51,7 +53,7 @@ The [`rnoaa`](https://docs.ropensci.org/rnoaa/) R package uses NOAA NCDC API v2,
 
 * [Tampa International Airport](https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/GHCND:USW00012842/detail)
   - Start Date:	1939-02-01
-  - End Date:	2024-01-07
+  - End Date:	today - 3 days
 
 Got token at [ncdc.noaa.gov/cdo-web/token](https://www.ncdc.noaa.gov/cdo-web/token). Added variable `NOAA_NCDC_CDO_token` to:
 
@@ -75,7 +77,7 @@ Got token at [ncdc.noaa.gov/cdo-web/token](https://www.ncdc.noaa.gov/cdo-web/tok
 options(noaakey = Sys.getenv("NOAA_NCDC_CDO_token"))
 
 # Specify datasetid and station
-stn     <- "GHCND:USW00012842" # TAMPA INTERNATIONAL AIRPORT, FL US
+stn          <- "GHCND:USW00012842" # TAMPA INTERNATIONAL AIRPORT, FL US
 stn_csv      <- here("data/tpa_ghcnd.csv")
 stn_meta_csv <- here("data/tpa_meta.csv")
 
@@ -185,10 +187,336 @@ d |>
 ```
 
 
+TODO:
+- trend analysis. e.g. [NOAA's Climate at a Glance](https://www.ncdc.noaa.gov/cag/global/time-series/globe/land_ocean/ytd/12/1880-2020). Typically based on the last 30 years, but here we've got back to 1939-02-01 so almost 100 years. Keep it 5 years and see how rate changing over time.
+
+- severe weather events? "Sea-level rise exponentially increases coastal flood frequency Mohsen taherkhani"
+
 #### Satellite
 
-
 ## Precipitation
+
+Materials:
+
+* "RAIN AS A DRIVER" in [tbep-os-presentations/state\_of\_the\_bay\_2023.qmd](https://github.com/tbep-tech/tbep-os-presentations/blob/6ff9054aa0eb1f194a9a28e3dc8b1eff02b6a58f/state_of_the_bay_2023.qmd#L354)
+
+* [Precipitation - NEXRAD QPE CDR | National Centers for Environmental Information (NCEI)](https://www.ncei.noaa.gov/products/climate-data-records/precipitation-nexrad-qpe)
+
+```{r}
+#| eval: FALSE
+
+librarian::shelf(
+  dplyr, here, mapview, readxl, sf, tbep-tech/tbeptools)
+# register with renv
+library(dplyr)
+library(here)
+library(mapview)
+library(readxl)
+library(sf)
+library(tbeptools)
+
+# from SWFWMD grid cells, use only if interested in areas finer than TB watershed
+# this currently gets the same data as the compiled spreadsheet
+grd <- st_read(here('../tbep-os-presentations/data/swfwmd-GARR-gisfiles-utm/swfwmd_pixel_2_utm_m_83.shp'), quiet = T)
+mapView(grd)
+
+tbgrdcent <- grd %>%
+  st_transform(crs = st_crs(tbshed)) %>%
+  st_centroid() %>%
+  .[tbshed, ]
+
+# unzip folders
+loc <- here('../tbep-os-presentations/data/swfwmd_rain')
+# files <- list.files(loc, pattern = '.zip', full.names = T)
+# lapply(files, unzip, exdir = loc)
+
+# read text files
+raindat <- list.files(loc, pattern = '19.*\\.txt$|20.*\\.txt$', full.names = T) %>%
+  lapply(read.table, sep = ',', header = F) %>%
+  do.call('rbind', .) %>%
+  rename(
+    'PIXEL' = V1,
+    'yr' = V2,
+    'inches' = V3) %>%
+  filter(PIXEL %in% tbgrdcent$PIXEL)
+
+# ave rain dat
+raindatave <- raindat %>%
+  summarise(
+    inches = mean(inches, na.rm = T),
+    .by = 'yr')
+
+##
+# use compiled SWFWMD data
+
+# # https://www.swfwmd.state.fl.us/resources/data-maps/rainfall-summary-data-region
+# # file is from the link "USGS watershed"
+# download.file(
+#   'https://www4.swfwmd.state.fl.us/RDDataImages/surf.xlsx?_ga=2.186665249.868698214.1705929229-785009494.1704644825',
+#   here('data/swfwmdrainfall.xlsx'),
+#   mode = 'wb'
+#   )
+
+raindatave_url <- "https://www4.swfwmd.state.fl.us/RDDataImages/surf.xlsx"
+dir.create(here('data/swfwmd.state.fl.us'))
+raindatave_xl <- here('data/swfwmd.state.fl.us/surf.xlsx')
+
+download.file(raindatave_url, raindatave_xl)
+read_excel(raindatave_xl)
+
+download.file(raindatave_url, here('data/swfwmdrainfall.xlsx'), mode = 'wb')
+
+raindatave <- read_excel(
+  raindatave_xl, sheet = 'ann-usgsbsn', skip = 1) %>% 
+  filter(Year %in% 1975:2023) %>% 
+  select(
+    yr = Year, 
+    inches = `Tampa Bay/Coastal Areas`
+  ) %>% 
+  mutate_all(as.numeric)
+
+raindatave_now <- 
+readxl::read_excel()
+
+raindatave <- read_excel(here('data/swfwmdrainfall.xlsx'), sheet = 'ann-usgsbsn', skip = 1) %>% 
+  filter(Year %in% 1975:2023) %>% 
+  select(
+    yr = Year, 
+    inches = `Tampa Bay/Coastal Areas`
+  ) %>% 
+  mutate_all(as.numeric)
+
+# ave chldat
+chlave <- anlz_avedat(epcdata) %>% 
+  .$ann %>% 
+  filter(var == 'mean_chla') %>% 
+  summarise(
+    chla = mean(val, na.rm = T),
+    .by = 'yr'
+  ) %>% 
+  filter(yr >= 1975)
+  
+toplo <- inner_join(chlave, raindatave, by = 'yr')
+
+p1 <- ggplot(raindatave, aes(x = yr, y = inches)) +
+  geom_line() +
+  geom_point() +
+  geom_point(data = raindatave[chlave$yr == 2023, ], col = 'red', size = 2) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+  ) + 
+  labs(
+    x = NULL, 
+    y = 'Annual rainfall (inches)', 
+    title = 'Annual rainfall', 
+    subtitle = 'Tampa Bay watershed, 1975 - 2023'
+  )
+
+p2 <- ggplot(chlave, aes(x = yr, y = chla)) +
+  geom_line() +
+  geom_point() +
+  geom_point(data = chlave[chlave$yr == 2023, ], col = 'red', size = 2) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+  ) + 
+  labs(
+    x = NULL, 
+    y = 'Chlorophyll-a (ug/L)', 
+    title = 'Annual mean chlorophyll-a', 
+    subtitle = 'All segments, 1975 - 2023'
+  )
+
+p3 <- ggplot(toplo, aes(x = inches, y = chla)) +
+  geom_text_repel(aes(label = yr), point.size = NA, segment.size = NA) +
+  geom_label_repel(data = toplo[toplo$yr == 2023, ], aes(label = yr), color = 'red', point.size = NA) +
+  geom_smooth(formula = y ~ x, method = 'lm', se = F, color = 'red') + 
+  # geom_segment(aes(x = 45, xend = 40, y = 4.86, yend = 4.86), color = 'red', arrow = arrow(length = unit(0.2, "inches")), linewidth = 1) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor = element_blank(),
+  ) + 
+  labs(
+    x = 'Annual rainfall (inches)', 
+    y = 'Chlorophyll-a (ug/L)', 
+    title = 'Annual mean chlorophyll-a vs. rainfall', 
+    caption = 'Data from EPCHC, SWFWMD'
+  )
+
+p <- (p1 / p2) | p3
+p
+```
+
+### rNOMADS
+
+```{r}
+# librarian::shelf(rNOMADS)
+
+
+```
+
+### prism
+
+* [HMS: Hydrologic Micro Services | United States Environmental Protection Agency | US EPA](https://qed.epa.gov/hms/meteorology/humidity/algorithms/)
+
+> The [Parameter-elevation Relationship on Independent Slopes Model (PRISM)](https://prism.oregonstate.edu/) is a combined dataset consisting of ground gauge station and RADAR products. The data is on a 4km grid resolution covering the contiguous United States. Data is available from 1981 to present.PRISM data are reported in GMT (UTC). PRISM provides daily average temperature and dew-point temperature data. Relative humidity is calculated using a version of the [August-Roche-Magnus equation](https://bmcnoldy.rsmas.miami.edu/Humidity.html) as follows ): `RH = 100*(EXP((17.625*TD)/(243.04+TD))/EXP((17.625*T)/(243.04+T)))` where, `RH` is % relative humidity, `TD` is dew-point temperature (celsius), and `T` is air temperature (celsius).
+
+* [AHPS Precipitation Analysis](https://water.weather.gov/precip/about.php)
+
+  > "Normal" precipitation is derived from PRISM climate data, created at Oregon State University. The PRISM gridded climate maps are considered the most detailed, highest-quality spatial climate datasets currently available.
+  
+* [prism](https://docs.ropensci.org/prism/articles/prism.html#prism-data-and-parameters) R package
+
+Parameter |	Description
+----------|-------------
+`tmin`    |	Minimum temperature
+`tmax`    |	Maximum temperature
+`tmean`   |	Mean temperature (`tmean == mean(tmin, tmax)`)
+`tdmean`  |	Mean dew point temperature
+`ppt`     |	Total precipitation (rain and snow)
+`vpdmin`  |	Daily minimum vapor pressure deficit
+`vpdmax`  |	Daily maximum vapor pressure deficit
+
+> Data are at 4km resolution, except for the normals which can also be downloaded at 800m resolution.
+
+Temporal data availability:
+
+- **Recent**\
+  1981 to present\
+  daily, monthly, annual data
+  
+- **Historical**\
+  1895 through 1980\
+  complete monthly and annual data by year
+  
+- **Normals**\
+  30-year normals
+  daily, monthly, and annual normals, each as a single grid
+  The 30 year PRISM normal from 1981-2010 is used for precipitation analysis since 2004. Prior to 2004 the 30 year PRISM normal from 1961-1990 is used.
+
+```{r}
+#| label: get prism
+#| messages: false
+#| warning: false
+
+librarian::shelf(glue, here, lubridate, mapview, prism, stars, stringr, tbep-tech/tbeptools, terra)
+# renv register libraries
+library(glue)
+library(here)
+library(lubridate)
+library(mapview)
+library(prism)
+library(stars)
+library(stringr)
+library(tbeptools)
+library(terra)
+
+dir_prism <- here("tmp/prism")
+dir.create(dir_prism, showWarnings = F)
+prism_set_dl_dir(dir_prism)
+
+# get_prism_dailys(
+#   type    = "tmean", 
+#   minDate = today() - days(8), 
+#   maxDate = today() - days(1),  # up to yesterday
+#   keepZip = F)
+# prism_archive_clean("tmean")
+# https://prism.nacse.org/downloads/
+#   https://prism.nacse.org/documents/PRISM_downloads_web_service.pdf
+#     http://services.nacse.org/prism/data/public/4km/tmin/20090405
+
+# get_prism_dailys(
+#   type    = "tmin", 
+#   minDate = "2024-01-01", 
+#   maxDate = "2024-03-07", 
+#   keepZip = F)
+# 
+# get_prism_dailys(
+#   type    = "tmax", 
+#   minDate = "2024-01-01", 
+#   maxDate = "2024-03-07", 
+#   keepZip = F)
+
+# Get monthly (every month) and annual 30-year normals for precipitation
+# get_prism_normals(
+#   type       = "ppt", 
+#   resolution = "800m", 
+#   mon        = 1:12, 
+#   annual     = TRUE,
+#   keepZip    = FALSE)
+
+# Plot the January 30-year average temperatures
+# grab only the first value, just in case multiple values are returned
+# pd_tmean_day <- prism_archive_subset(
+#   "tmean", "daily", dates = "2024-03-07")
+# Error in pd_image(pd_tmean_day, col = "redblue") : 
+#   You can only quick image one file at a time.
+# > pd_tmean_day
+# [1] "PRISM_tmean_early_4kmD2_20240307_bil"       "PRISM_tmean_provisional_4kmD2_20240307_bil"
+# prism_archive_clean("tmean", "daily")  # 'cleans' the prism download data by removing early and/or provisional data if newer (provisional or stable) data also exist for the same variable and temporal period
+pd_tmean_day <- prism_archive_subset(
+  "tmean", "daily", dates = "2024-03-07")
+pd_image(pd_tmean_day, col="redblue")
+
+pd_ppt_nrml <- prism_archive_subset(
+  "ppt", "monthly normals", 
+  mon = 1, resolution = "800m")
+(path_ppt_nrml <- pd_to_file(pd_ppt_nrml))
+
+# raster stack ----
+var    <- "tmean"
+period <- "daily"
+
+get_prism_dailys(
+  type    = var, 
+  minDate = today() - days(3),  # last 3 days
+  maxDate = today() - days(1),  # up to yesterday
+  keepZip = F)
+prism_archive_clean(var, period)
+
+pd       <- prism_archive_subset(var, period)
+pd_dates <- pd_get_date(pd)
+
+r <- pd_stack(pd) |> 
+  rast()
+# tbshed_pd <- tbshed |> 
+tbshed_pd <- tbsegshed |> 
+  st_transform(crs(r, proj=T))
+r_tb <- r |> 
+  crop(tbshed_pd, mask = T, touches = T) |>
+  trim()
+
+# TODO: summarize by tbeptools::tbsegshed, zip code
+
+# r_tif <- here("tmp/prism", glue("tmean_20240307_bil")
+# terra::writeRaster(r_tb, , overwrite = T)
+
+date <- max(pd_dates)
+i    <- which(pd_dates == date)
+lyr  <- glue("{var}<br>{period}<br>{date}")
+
+# terra::writeRaster(r_tb[[i]], here("tmp", glue("{var}_{date}.tif")), overwrite = T)
+
+mapView(r_tb[[i]], layer.name = lyr) + 
+  mapView(tbshed_pd)
+```
+
+
+TODO:
+
+- [ ] compare these precip data w/ Water District data to make case for using PRISM data
+
+Questions:
+
+1. Given variability within each polygon, which of these products shall we use to plot: min(min_temp), mean(mean_temp), max(max_temp); min(mean_temp), mean(mean_temp), max(max_temp)?
+
+### Communicating results
+
+* Choi et al. (2024) [North-South disparity in impact of climate change on “outdoor days”](https://journals.ametsoc.org/view/journals/clim/aop/JCLI-D-23-0346.1/JCLI-D-23-0346.1.xml). _Journal of Climate_
+  * news summary: [A new way to quantify climate change impacts: “Outdoor days” | MIT News | Massachusetts Institute of Technology](https://news.mit.edu/2024/new-way-quantify-climate-change-impacts-outdoor-days-0322)
+  * Shiny app: [California Outdoor Days | Eltahir Research Group](https://eltahir.mit.edu/california-outdoor-days/)
+
 
 ## Sea Level Rise
 
@@ -207,6 +535,17 @@ Types of data:
 ![Screenshot of NOAA's [Sea Level Trends](https://tidesandcurrents.noaa.gov/sltrends/sltrends.html) zoomed into the Tampa Bay.](figures/slr_tidesandcurrents.noaa.gov-sltrends.png){#fig-slr-noaa}
 
 * [PORTS: Tampa Bay PORTS - NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/ports/index.html?port=tb)
+
+```{r}
+librarian::shelf(
+  ropensci/rnoaa)
+# register with renv
+library(rnoaa)
+
+
+
+```
+
 
 ### Satellite
 
