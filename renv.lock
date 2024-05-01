@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.3.2",
+    "Version": "4.4.0",
     "Repositories": [
       {
         "Name": "BioCsoft",
@@ -29,7 +29,7 @@
     ]
   },
   "Bioconductor": {
-    "Version": "3.18"
+    "Version": "3.19"
   },
   "Packages": {
     "AsioHeaders": {
@@ -73,9 +73,9 @@
     },
     "MASS": {
       "Package": "MASS",
-      "Version": "7.3-60.0.1",
+      "Version": "7.3-60.2",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "CRAN",
       "Requirements": [
         "R",
         "grDevices",
@@ -84,13 +84,13 @@
         "stats",
         "utils"
       ],
-      "Hash": "b765b28387acc8ec9e9c1530713cb19c"
+      "Hash": "2f342c46163b0b54d7b64d1f798e2c78"
     },
     "Matrix": {
       "Package": "Matrix",
-      "Version": "1.6-5",
+      "Version": "1.7-0",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "CRAN",
       "Requirements": [
         "R",
         "grDevices",
@@ -101,7 +101,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "8c7115cd3a0e048bda2a7cd110549f7a"
+      "Hash": "1920b2f11133b12350024297d8a4ff4a"
     },
     "R6": {
       "Package": "R6",
@@ -376,7 +376,7 @@
     },
     "crul": {
       "Package": "crul",
-      "Version": "1.4.0",
+      "Version": "1.4.2",
       "Source": "Repository",
       "Repository": "RSPM",
       "Requirements": [
@@ -387,7 +387,7 @@
         "mime",
         "urltools"
       ],
-      "Hash": "1eb00a531331c91d970f3af74b75321f"
+      "Hash": "5685d2603020d0f879a147ba23d51292"
     },
     "curl": {
       "Package": "curl",
@@ -600,14 +600,14 @@
     },
     "fs": {
       "Package": "fs",
-      "Version": "1.6.3",
+      "Version": "1.6.4",
       "Source": "Repository",
-      "Repository": "CRAN",
+      "Repository": "RSPM",
       "Requirements": [
         "R",
         "methods"
       ],
-      "Hash": "47b5f30c720c23999b913a1a635cf0bb"
+      "Hash": "15aeb8c27f5ea5161f9f6a641fafd93a"
     },
     "gdtools": {
       "Package": "gdtools",
@@ -667,7 +667,7 @@
     },
     "ggplot2": {
       "Package": "ggplot2",
-      "Version": "3.5.0",
+      "Version": "3.5.1",
       "Source": "Repository",
       "Repository": "RSPM",
       "Requirements": [
@@ -688,7 +688,7 @@
         "vctrs",
         "withr"
       ],
-      "Hash": "52ef83f93f74833007f193b2d4c159a2"
+      "Hash": "44c6a2f8202d5b7e878ea274b1092426"
     },
     "glue": {
       "Package": "glue",
@@ -717,7 +717,7 @@
     },
     "gtable": {
       "Package": "gtable",
-      "Version": "0.3.4",
+      "Version": "0.3.5",
       "Source": "Repository",
       "Repository": "RSPM",
       "Requirements": [
@@ -728,7 +728,7 @@
         "lifecycle",
         "rlang"
       ],
-      "Hash": "b29cf3031f49b04ab9c852c912547eef"
+      "Hash": "e18861963cbc65a27736e02b3cd3c4a0"
     },
     "here": {
       "Package": "here",
@@ -1121,13 +1121,13 @@
     },
     "openssl": {
       "Package": "openssl",
-      "Version": "2.1.1",
+      "Version": "2.1.2",
       "Source": "Repository",
       "Repository": "RSPM",
       "Requirements": [
         "askpass"
       ],
-      "Hash": "2a0dc8c6adfb6f032e4d4af82d258ab5"
+      "Hash": "ea2475b073243d9d338aa8f086ce973e"
     },
     "patchwork": {
       "Package": "patchwork",
@@ -1445,13 +1445,13 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "1.0.5",
+      "Version": "1.0.7",
       "Source": "Repository",
       "Repository": "RSPM",
       "Requirements": [
         "utils"
       ],
-      "Hash": "32c3f93e8360f667ca5863272ec8ba6a"
+      "Hash": "397b7b2a265bc5a7a06852524dabae20"
     },
     "rjson": {
       "Package": "rjson",
@@ -1503,9 +1503,9 @@
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteUsername": "ropensci",
       "RemoteRepo": "rnoaa",
-      "RemoteRef": "master",
+      "RemoteUsername": "ropensci",
+      "RemoteRef": "HEAD",
       "RemoteSha": "95868c968c62768fe7e8143a8f631b97de120910",
       "Requirements": [
         "XML",
@@ -1526,7 +1526,7 @@
         "utils",
         "xml2"
       ],
-      "Hash": "fcc6fccb7053866617087be7bc4fc25e"
+      "Hash": "aa9b0868685f77c20e4191436532016a"
     },
     "rprojroot": {
       "Package": "rprojroot",
@@ -1717,15 +1717,15 @@
     },
     "tbeptools": {
       "Package": "tbeptools",
-      "Version": "2.0.1.9021",
+      "Version": "2.0.1.9022",
       "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteUsername": "tbep-tech",
-      "RemoteRepo": "tbeptools",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "3a7eeb0415e7a2ab585dbc9e92a0b32a3b94e79b",
-      "RemoteHost": "api.github.com",
       "Remotes": "ropensci/rnoaa",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "tbeptools",
+      "RemoteUsername": "tbep-tech",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "3b10df178e9d559a210e460a15a5543445ba4398",
       "Requirements": [
         "R",
         "dataRetrieval",
@@ -1748,7 +1748,7 @@
         "tidyr",
         "tools"
       ],
-      "Hash": "ada73af50efcfb559ccfa3b89f98aaa7"
+      "Hash": "58a51ab7b0fb6a91ed1471927633609a"
     },
     "terra": {
       "Package": "terra",
