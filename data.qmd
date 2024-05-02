@@ -39,37 +39,36 @@ options(readr.show_col_types = F)
 
 ## Temperature
 
-
-
 ### Observed
 
 The [`rnoaa`](https://docs.ropensci.org/rnoaa/) R package uses NOAA NCDC API v2, which only goes to 2022-09-15.
 
-* [NCEI Web Services | Climate Data Online (CDO) | National Center for Environmental Information (NCEI)](https://www.ncdc.noaa.gov/cdo-web/webservices)
+-   [NCEI Web Services \| Climate Data Online (CDO) \| National Center for Environmental Information (NCEI)](https://www.ncdc.noaa.gov/cdo-web/webservices)
 
-* [Data Tools | Climate Data Online (CDO) | National Climatic Data Center (NCDC)](https://www.ncdc.noaa.gov/cdo-web/datatools)
+-   [Data Tools \| Climate Data Online (CDO) \| National Climatic Data Center (NCDC)](https://www.ncdc.noaa.gov/cdo-web/datatools)
 
 #### Weather stations
 
-* [Tampa International Airport](https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/GHCND:USW00012842/detail)
-  - Start Date:	1939-02-01
-  - End Date:	today - 3 days
+-   [Tampa International Airport](https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/GHCND:USW00012842/detail)
+    -   Start Date: 1939-02-01
+    -   End Date: today - 3 days
 
 Got token at [ncdc.noaa.gov/cdo-web/token](https://www.ncdc.noaa.gov/cdo-web/token). Added variable `NOAA_NCDC_CDO_token` to:
 
-- locally: 
-  ```r
-  file.edit("~/.Renviron")
-  ```
-  
-- on GitHub: 
-  Repository secrets in [Actions secrets · tbep-tech/climate-change-indicators](https://github.com/tbep-tech/climate-change-indicators/settings/secrets/actions)
-  
-* [GCHN readme](https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt)
-  - `PRCP`: Precipitation (tenths of mm)
-  - `TMAX`: Maximum temperature (tenths of degrees C)
-  - `TMIN`: Minimum temperature (tenths of degrees C)
-  
+-   locally:
+
+    ``` r
+    file.edit("~/.Renviron")
+    ```
+
+-   on GitHub: Repository secrets in [Actions secrets · tbep-tech/climate-change-indicators](https://github.com/tbep-tech/climate-change-indicators/settings/secrets/actions)
+
+-   [GCHN readme](https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt)
+
+    -   `PRCP`: Precipitation (tenths of mm)
+    -   `TMAX`: Maximum temperature (tenths of degrees C)
+    -   `TMIN`: Minimum temperature (tenths of degrees C)
+
 ```{r}
 #| label: fig-weather-station
 
@@ -186,11 +185,9 @@ d |>
   dySeries("precip_mm", label = "precip")
 ```
 
+TODO: - trend analysis. e.g. [NOAA's Climate at a Glance](https://www.ncdc.noaa.gov/cag/global/time-series/globe/land_ocean/ytd/12/1880-2020). Typically based on the last 30 years, but here we've got back to 1939-02-01 so almost 100 years. Keep it 5 years and see how rate changing over time.
 
-TODO:
-- trend analysis. e.g. [NOAA's Climate at a Glance](https://www.ncdc.noaa.gov/cag/global/time-series/globe/land_ocean/ytd/12/1880-2020). Typically based on the last 30 years, but here we've got back to 1939-02-01 so almost 100 years. Keep it 5 years and see how rate changing over time.
-
-- severe weather events? "Sea-level rise exponentially increases coastal flood frequency Mohsen taherkhani"
+-   severe weather events? "Sea-level rise exponentially increases coastal flood frequency Mohsen taherkhani"
 
 #### Satellite
 
@@ -198,9 +195,9 @@ TODO:
 
 Materials:
 
-* "RAIN AS A DRIVER" in [tbep-os-presentations/state\_of\_the\_bay\_2023.qmd](https://github.com/tbep-tech/tbep-os-presentations/blob/6ff9054aa0eb1f194a9a28e3dc8b1eff02b6a58f/state_of_the_bay_2023.qmd#L354)
+-   "RAIN AS A DRIVER" in [tbep-os-presentations/state_of_the_bay_2023.qmd](https://github.com/tbep-tech/tbep-os-presentations/blob/6ff9054aa0eb1f194a9a28e3dc8b1eff02b6a58f/state_of_the_bay_2023.qmd#L354)
 
-* [Precipitation - NEXRAD QPE CDR | National Centers for Environmental Information (NCEI)](https://www.ncei.noaa.gov/products/climate-data-records/precipitation-nexrad-qpe)
+-   [Precipitation - NEXRAD QPE CDR \| National Centers for Environmental Information (NCEI)](https://www.ncei.noaa.gov/products/climate-data-records/precipitation-nexrad-qpe)
 
 ```{r}
 #| eval: FALSE
@@ -361,45 +358,51 @@ p
 
 ### prism
 
-* [HMS: Hydrologic Micro Services | United States Environmental Protection Agency | US EPA](https://qed.epa.gov/hms/meteorology/humidity/algorithms/)
+-   [HMS: Hydrologic Micro Services \| United States Environmental Protection Agency \| US EPA](https://qed.epa.gov/hms/meteorology/humidity/algorithms/)
 
 > The [Parameter-elevation Relationship on Independent Slopes Model (PRISM)](https://prism.oregonstate.edu/) is a combined dataset consisting of ground gauge station and RADAR products. The data is on a 4km grid resolution covering the contiguous United States. Data is available from 1981 to present.PRISM data are reported in GMT (UTC). PRISM provides daily average temperature and dew-point temperature data. Relative humidity is calculated using a version of the [August-Roche-Magnus equation](https://bmcnoldy.rsmas.miami.edu/Humidity.html) as follows ): `RH = 100*(EXP((17.625*TD)/(243.04+TD))/EXP((17.625*T)/(243.04+T)))` where, `RH` is % relative humidity, `TD` is dew-point temperature (celsius), and `T` is air temperature (celsius).
 
-* [AHPS Precipitation Analysis](https://water.weather.gov/precip/about.php)
+-   [AHPS Precipitation Analysis](https://water.weather.gov/precip/about.php)
 
-  > "Normal" precipitation is derived from PRISM climate data, created at Oregon State University. The PRISM gridded climate maps are considered the most detailed, highest-quality spatial climate datasets currently available.
-  
-* [prism](https://docs.ropensci.org/prism/articles/prism.html#prism-data-and-parameters) R package
+    > "Normal" precipitation is derived from PRISM climate data, created at Oregon State University. The PRISM gridded climate maps are considered the most detailed, highest-quality spatial climate datasets currently available.
 
-Parameter |	Description
-----------|-------------
-`tmin`    |	Minimum temperature
-`tmax`    |	Maximum temperature
-`tmean`   |	Mean temperature (`tmean == mean(tmin, tmax)`)
-`tdmean`  |	Mean dew point temperature
-`ppt`     |	Total precipitation (rain and snow)
-`vpdmin`  |	Daily minimum vapor pressure deficit
-`vpdmax`  |	Daily maximum vapor pressure deficit
+-   [prism](https://docs.ropensci.org/prism/articles/prism.html#prism-data-and-parameters) R package
+
+| Parameter | Description                                    |
+|-----------|------------------------------------------------|
+| `tmin`    | Minimum temperature                            |
+| `tmax`    | Maximum temperature                            |
+| `tmean`   | Mean temperature (`tmean == mean(tmin, tmax)`) |
+| `tdmean`  | Mean dew point temperature                     |
+| `ppt`     | Total precipitation (rain and snow)            |
+| `vpdmin`  | Daily minimum vapor pressure deficit           |
+| `vpdmax`  | Daily maximum vapor pressure deficit           |
 
 > Data are at 4km resolution, except for the normals which can also be downloaded at 800m resolution.
 
 Temporal data availability:
 
-- **Recent**\
-  1981 to present\
-  daily, monthly, annual data
-  
-- **Historical**\
-  1895 through 1980\
-  complete monthly and annual data by year
-  
-- **Normals**\
-  30-year normals
-  daily, monthly, and annual normals, each as a single grid
-  The 30 year PRISM normal from 1981-2010 is used for precipitation analysis since 2004. Prior to 2004 the 30 year PRISM normal from 1961-1990 is used.
+-   **Recent**\
+    1981 to present\
+    daily, monthly, annual data
+
+-   **Historical**\
+    1895 through 1980\
+    complete monthly and annual data by year
+
+-   **Normals**\
+    30-year normals daily, monthly, and annual normals, each as a single grid The 30 year PRISM normal from 1981-2010 is used for precipitation analysis since 2004. Prior to 2004 the 30 year PRISM normal from 1961-1990 is used.
+
+-   Forms
+
+    -   stable
+
+    -   provisional
+
+    -   early
 
 ```{r}
-#| label: get prism
+#| label: get_prism
 #| messages: false
 #| warning: false
 
@@ -423,124 +426,250 @@ library(terra)
 dir_prism <- here("tmp/prism")
 dir.create(dir_prism, showWarnings = F)
 prism_set_dl_dir(dir_prism)
+```
 
-# get_prism_dailys(
-#   type    = "tmean", 
-#   minDate = today() - days(8), 
-#   maxDate = today() - days(1),  # up to yesterday
-#   keepZip = F)
-# prism_archive_clean("tmean")
-# https://prism.nacse.org/downloads/
-#   https://prism.nacse.org/documents/PRISM_downloads_web_service.pdf
-#     http://services.nacse.org/prism/data/public/4km/tmin/20090405
-
-# get_prism_dailys(
-#   type    = "tmin", 
-#   minDate = "2024-01-01", 
-#   maxDate = "2024-03-07", 
-#   keepZip = F)
-# 
-# get_prism_dailys(
-#   type    = "tmax", 
-#   minDate = "2024-01-01", 
-#   maxDate = "2024-03-07", 
-#   keepZip = F)
+-   https://prism.nacse.org/downloads/
+    -   https://prism.nacse.org/documents/PRISM_downloads_web_service.pdf
+        -   http://services.nacse.org/prism/data/public/4km/tmin/20090405
 
 # Get monthly (every month) and annual 30-year normals for precipitation
+
 # get_prism_normals(
-#   type       = "ppt", 
-#   resolution = "800m", 
-#   mon        = 1:12, 
-#   annual     = TRUE,
-#   keepZip    = FALSE)
 
-# Plot the January 30-year average temperatures
-# grab only the first value, just in case multiple values are returned
-# pd_tmean_day <- prism_archive_subset(
-#   "tmean", "daily", dates = "2024-03-07")
-# Error in pd_image(pd_tmean_day, col = "redblue") : 
-#   You can only quick image one file at a time.
-# > pd_tmean_day
-# [1] "PRISM_tmean_early_4kmD2_20240307_bil"       "PRISM_tmean_provisional_4kmD2_20240307_bil"
-# prism_archive_clean("tmean", "daily")  # 'cleans' the prism download data by removing early and/or provisional data if newer (provisional or stable) data also exist for the same variable and temporal period
+# type = "ppt",
+
+# resolution = "800m",
+
+# mon = 1:12,
+
+# annual = TRUE,
+
+# keepZip = FALSE)
+
+```{r}
+var    <- "tmax"
 period <- "daily"
-var    <- "tmean"
-date   <- "2024-03-07"
-get_prism_dailys(type=var, dates=date, keepZip=F)
-pd_tmean_day <- prism_archive_subset(var, period, dates = date)
-pd_image(pd_tmean_day, col="redblue")
-
-# pd_ppt_nrml <- prism_archive_subset(
-#   "ppt", "monthly normals", 
-#   mon = 1, resolution = "800m")
-# (path_ppt_nrml <- pd_to_file(pd_ppt_nrml))
-
-# raster stack ----
-var    <- "tmean"
-period <- "daily"
+date   <- today() - days(1) # yesterday
 
 get_prism_dailys(
-  type    = var, 
-  minDate = today() - days(3),  # last 3 days
-  maxDate = today() - days(1),  # up to yesterday
+  type    = "tmax", 
+  dates   = date, 
   keepZip = F)
-prism_archive_clean(var, period)
 
-pd       <- prism_archive_subset(var, period)
-pd_dates <- pd_get_date(pd)
-
+pd <- prism_archive_subset(var, period, dates = date)
+pd_image(pd, col="redblue")
 r <- pd_stack(pd) |> 
   rast()
-# tbshed_pd <- tbshed |> 
-tbshed_pd <- tbsegshed |> 
-  st_transform(crs(r, proj=T))
-# sf broken, so Warning: Cannot find proj.db
-r_tb <- r |> 
-  crop(tbshed_pd, mask = T, touches = T) |>
-  trim()
-
-# TODO: summarize by tbeptools::tbsegshed, zip code
-
-# r_tif <- here("tmp/prism", glue("tmean_20240307_bil")
-# terra::writeRaster(r_tb, , overwrite = T)
-
-date <- max(pd_dates)
-i    <- which(pd_dates == date)
-lyr  <- glue("{var}<br>{period}<br>{date}")
-
-# terra::writeRaster(r_tb[[i]], here("tmp", glue("{var}_{date}.tif")), overwrite = T)
-
-# mapView(r_tb[[i]], layer.name = lyr) +
-#   mapView(tbshed_pd)
-# sf broken, so Error: Cannot find proj.db
+plot(r)
 
 library(leaflet)
+r_3857 <- projectRasterForLeaflet(
+  r, method = "bilinear")
+pal <- colorNumeric(
+  "Spectral",  values(r_3857, na.rm=T), 
+  na.color = "transparent")
+
 leaflet() |>
   addProviderTiles(
     providers$CartoDB.Positron) |>
   addRasterImage(
-    r_tb[[i]], opacity = 0.7) |> 
+    r_3857, opacity = 0.7) |> 
   addPolygons(
     data = tbsegshed, 
     fillOpacity = 0, 
-    color = "black", weight = 1)
+    color = "purple", weight = 5)
 ```
 
+## Assign bounding box for AoI cropping of rasters
 
-TODO:
+```{r}
+# tbshed_pd <- tbshed |> 
+r <- pd_stack(prism_archive_subset("tmax", "daily")[1])
+crs <- crs(r, proj=T)  # +proj=longlat +ellps=GRS80 +no_defs
+tbshed_pd <- tbsegshed |> 
+  st_transform()
 
-- [ ] compare these precip data w/ Water District data to make case for using PRISM data
+sf_use_s2(F)
+tbshed_buf <- tbshed_pd |> 
+  st_union() |> 
+  st_make_valid() |> 
+  st_buffer(0.2) |> 
+  st_bbox() |> 
+  st_as_sfc() |> 
+  st_as_sf()
+
+bb <- st_bbox(tbshed_buf) |> round(1)
+# xmin  ymin  xmax  ymax 
+# -83.1  27.2 -81.7  28.6
+bb <- c(xmin = -83.1, ymin = 27.2, xmax = -81.7, ymax = 28.6)
+ply_bb <- st_bbox(bb, crs = crs(r, proj=T)) |> 
+  st_as_sfc() |> 
+  st_as_sf()
+
+leaflet() |> 
+  addProviderTiles(providers$Stadia.StamenTonerLite) |> 
+  addPolygons(data = ply_bb, color="green") |> 
+  addPolygons(data = tbshed_pd)
+```
+
+```{r}
+#| label: fetch_prism
+
+library(dplyr)
+library(furrr) # install.packages("furrr")
+library(glue)
+library(here)
+library(lubridate)
+library(prism)
+library(purrr)
+library(sf)
+library(terra)
+
+n_cores <- parallel::detectCores()
+plan(multisession, workers = n_cores)
+
+prism_archive_crop <- function(
+  type, temp_period, ...,
+  bb  = c(xmin = -82.9, ymin = 27.2, xmax = -81.7, ymax = 28.6),
+  crs = "+proj=longlat +ellps=GRS80 +no_defs",
+  verbose = F){
+
+  ply_bb <- sf::st_bbox(bb, crs = crs) |> 
+    sf::st_as_sfc() |> 
+    sf::st_as_sf()
+  
+  pds <- prism::prism_archive_subset(type, temp_period, ...)
+  
+  for (i in 1:length(pds)){ # i = 1
+    r <- prism::pd_stack(pds[i]) |> 
+      terra::rast()
+    
+    is_cropped <- all(sf::st_bbox(r) |> round(1) == bb)
+    if (!is_cropped){
+      r_bil <- terra::sources(r)
+      r_bb <- terra::crop(r, ply_bb, mask = T, touches = T) |>
+        terra::trim()
+      terra::writeRaster(r_bb, r_bil, filetype = "EHdr", overwrite = T)
+    }
+  }
+}
+
+yrs  <- 1981:year(now())
+mos  <- 1:12
+vars <- c("tmin", "tmax", "tdmean", "ppt")  
+# skipping: "tmean" [avg(tmin,tmax)], vapor pressure ["vpdmin", "vpdmax"]
+
+
+library(lubridate)
+# ((today() - days(1)) - date("1981-01-01")) |> as.integer() * length(vars) # 63,304 dirs expected in tmp/prism
+n_dirs <- fs::dir_ls(here::here("tmp/prism"), type = "directory") |> length()
+message(glue::glue("{n_dirs} ~ {Sys.time()}"))
+# 1540 ~ 2024-05-02 18:28:41.717828
+# 2527 ~ 2024-05-02 18:46:32.97783
+# 3357 ~ 2024-05-02 18:59:52.753584
+n_all <- 63304
+
+n1 <- 1540
+t1 <- parse_date_time(
+    "2024-05-02 18:28:41.717828", "Ymd HMS")
+n2 <- 3357
+t2 <- parse_date_time(
+    "2024-05-02 18:59:52.753584", "Ymd HMS")
+
+dt <- difftime(t2, t1, units = "secs") |> as.integer()
+dn <- n2 - n1
+n_togo <- n_all - n2
+eta <- t2 + seconds(dn / dt * n_togo)
+message(glue::glue("ETA: {eta}"))
+# ETA: 2024-05-03 10:20:03.1543
+# ETA: 2024-05-03 11:10:09.588966
+
+d_ymv = tibble(
+  yr = yrs) |> 
+    cross_join(
+      tibble(mo = mos)) |> 
+    cross_join(
+      tibble(var = vars)) |> 
+  mutate(
+    date_beg = map2_chr(yr, mo, \(yr, mo){
+      date(glue("{yr}-{mo}-01")) |> 
+        as.character() }),
+    date_end = map_chr(date_beg, \(date_beg){
+      # date_beg <- "2024-05-01"
+      date_end <- (date(date_beg) + months(1)) - days(1)
+      yesterday <- today() - days(1)
+      if (date_end > yesterday)
+          date_end <- yesterday
+      date_end |> 
+        as.character()
+    }) ) |> 
+  filter(date(date_beg) < today()) |> 
+  arrange(date_beg, date_end, var) |> 
+  select(date_beg, date_end, var) |> 
+  filter(date(date_beg) >= date("1981-03-01")) # |> 
+  # slice(1:(n_cores*3))
+
+future_pmap(d_ymv, \(date_beg, date_end, var){
+
+  prism_set_dl_dir(here::here("tmp/prism"))
+  
+  # fetch PRISM national rasters
+  get_prism_dailys(
+    type    = var, 
+    minDate = date_beg,
+    maxDate = date_end,
+    keepZip = F)
+  
+  # remove any duplicates: stable > provisional > early
+  prism_archive_clean(
+    var, "daily", 
+    minDate = date_beg,
+    maxDate = date_end)
+  
+  # trim rasters to bounding box
+  prism_archive_crop(
+    var, "daily", 
+    minDate = date_beg,
+    maxDate = date_end)
+})
+
+# clear future processes
+if (!inherits(plan(), "sequential")) plan(sequential)
+
+```
+
+-   [What is the Dewpoint & How is it Related to Relative Humidity & Heat Index? \| OpenSnow](https://opensnow.com/news/post/what-is-the-dewpoint-how-is-it-related-to-the-relative-humidity-heat-index)\
+    Once the dewpoint reaches above 55 degrees Fahrenheit (°F), the air becomes sticky and can be described as ‘muggy’ above 65°F. If the dewpoint reaches above 75°F, the air can often be described as ‘oppressive’...\
+    The relative humidity is expressed in a percent (0-100%) and is the ratio of the amount of atmospheric moisture present relative to the amount that would be present if the air were saturated. What this means is that the relative humidity is **dependent on both the dewpoint and the air temperature.**
+-   [Heat Index Calculation](https://www.wpc.ncep.noaa.gov/html/heatindex.shtml)
+    -   [Heat Index Equation](https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml)
+    -   [It’s Not the Heat …](https://brownmath.com/bsci/notheat.htm#DewpointBackward)\
+        Suppose you know the current temperature and the dew point. Can you get the relative humidity from them? Absolutely!
+    -   [Heat Index | NWS](https://w2.weather.gov/arx/heat_index)
+    - Lawrence (2005) [The Relationship between Relative Humidity and the Dewpoint Temperature in Moist Air: A Simple Conversion and Applications](https://journals.ametsoc.org/view/journals/bams/86/2/bams-86-2-225.xml) _Bulletin of the American Meteorological Society_
+    - [What is Apparent Temperature?](https://meteor.geol.iastate.edu/~ckarsten/bufkit/apparent_temperature.html)
+
+```{r}
+#| label: crop_prism
+
+prism_set_dl_dir(here::here("tmp/prism"))
+
+for (var in vars)
+  prism_archive_crop(var, "daily")
+
+```
+
+TODO: - \[ \] summarize by tbeptools::tbsegshed, zip code - \[ \] compare these precip data w/ Water District data to make case for using PRISM data
 
 Questions:
 
-1. Given variability within each polygon, which of these products shall we use to plot: min(min_temp), mean(mean_temp), max(max_temp); min(mean_temp), mean(mean_temp), max(max_temp)?
+1.  Given variability within each polygon, which of these products shall we use to plot: min(min_temp), mean(mean_temp), max(max_temp); min(mean_temp), mean(mean_temp), max(max_temp)?
 
 ### Communicating results
 
-* Choi et al. (2024) [North-South disparity in impact of climate change on “outdoor days”](https://journals.ametsoc.org/view/journals/clim/aop/JCLI-D-23-0346.1/JCLI-D-23-0346.1.xml). _Journal of Climate_
-  * news summary: [A new way to quantify climate change impacts: “Outdoor days” | MIT News | Massachusetts Institute of Technology](https://news.mit.edu/2024/new-way-quantify-climate-change-impacts-outdoor-days-0322)
-  * Shiny app: [California Outdoor Days | Eltahir Research Group](https://eltahir.mit.edu/california-outdoor-days/)
-
+-   Choi et al. (2024) [North-South disparity in impact of climate change on “outdoor days”](https://journals.ametsoc.org/view/journals/clim/aop/JCLI-D-23-0346.1/JCLI-D-23-0346.1.xml). *Journal of Climate*
+    -   news summary: [A new way to quantify climate change impacts: “Outdoor days” \| MIT News \| Massachusetts Institute of Technology](https://news.mit.edu/2024/new-way-quantify-climate-change-impacts-outdoor-days-0322)
+    -   Shiny app: [California Outdoor Days \| Eltahir Research Group](https://eltahir.mit.edu/california-outdoor-days/)
 
 ## Sea Level Rise
 
@@ -548,17 +677,15 @@ Sea level rise occurs from principally two sources: 1) thermal expansion; and 2)
 
 Types of data:
 
-  1. Observed (past, present)
-    - tide gauge
-    - satellite, e.g. [Laboratory for Satellite Altimetry / Sea Level Rise](https://www.star.nesdis.noaa.gov/socd/lsa/SeaLevelRise/)
-      - Level-3 products distributed through NOAA CoastWatch (Sea Level Anomaly and along-track altimetry)
-  1. Projected (future). modeled
+1.  Observed (past, present) - tide gauge - satellite, e.g. [Laboratory for Satellite Altimetry / Sea Level Rise](https://www.star.nesdis.noaa.gov/socd/lsa/SeaLevelRise/)
+    -   Level-3 products distributed through NOAA CoastWatch (Sea Level Anomaly and along-track altimetry)
+2.  Projected (future). modeled
 
 ### Gauges
 
 ![Screenshot of NOAA's [Sea Level Trends](https://tidesandcurrents.noaa.gov/sltrends/sltrends.html) zoomed into the Tampa Bay.](figures/slr_tidesandcurrents.noaa.gov-sltrends.png){#fig-slr-noaa}
 
-* [PORTS: Tampa Bay PORTS - NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/ports/index.html?port=tb)
+-   [PORTS: Tampa Bay PORTS - NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/ports/index.html?port=tb)
 
 ```{r}
 librarian::shelf(
@@ -570,10 +697,9 @@ library(rnoaa)
 
 ```
 
-
 ### Satellite
 
-* [NOAA / NESDIS / STAR - Laboratory for Satellite Altimetry / Sea Level Rise](https://www.star.nesdis.noaa.gov/socd/lsa/SeaLevelRise/LSA_SLR_maps.php)
+-   [NOAA / NESDIS / STAR - Laboratory for Satellite Altimetry / Sea Level Rise](https://www.star.nesdis.noaa.gov/socd/lsa/SeaLevelRise/LSA_SLR_maps.php)
 
 ```{r}
 #| label: fig-slr-satellite
@@ -600,6 +726,4 @@ plet(r_slr_mer, tiles=providers$Esri.OceanBasemap) |>
 
 ## Severe Weather
 
-* [SWDI vignette • rnoaa](https://docs.ropensci.org/rnoaa/articles/swdi_vignette.html)
-
-
+-   [SWDI vignette • rnoaa](https://docs.ropensci.org/rnoaa/articles/swdi_vignette.html)
