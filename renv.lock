@@ -24,7 +24,7 @@
       },
       {
         "Name": "CRAN",
-        "URL": "https://packagemanager.posit.co/cran/latest"
+        "URL": "https://cran.mirror.garr.it/CRAN"
       }
     ]
   },
@@ -1793,8 +1793,8 @@
       "Package": "tbeptools",
       "Version": "2.0.1.9022",
       "Source": "GitHub",
-      "Remotes": "ropensci/rnoaa",
       "RemoteType": "github",
+      "Remotes": "ropensci/rnoaa",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "tbeptools",
       "RemoteUsername": "tbep-tech",

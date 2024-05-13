@@ -1,3 +1,9 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
 # Data
 
 ## Task 1. Assessment of available data and coverage
@@ -9,11 +15,18 @@ The permanency and ease of access of each data source should be noted when makin
 ```{r}
 #| label: load-packages
 
+# options(repos=c(CRAN="https://cran.mirror.garr.it/CRAN/"))
+# install.packages(c("sf","terra"), type = "binary")
+# renv::snapshot()
+# renv::clean()
+# renv::rebuild()
+# built from source: sp, survival, rnoaa, tbeptools
+
 if (!"librarian" %in% rownames(installed.packages()))
   install.packages("librarian")
 librarian::shelf(
-  dplyr, dygraphs, glue, here, leaflet, lubridate, sf,
-  tbep-tech/tbeptools, 
+  dplyr, dygraphs, glue, here, htmltools, leaflet, leaflet.extras2, lubridate, 
+  sf, stringr, tbep-tech/tbeptools, prism, purrr,
   RColorBrewer, readr, rnoaa, terra, tidyr, webshot2,
   quiet = T)
 
@@ -26,9 +39,12 @@ library(leaflet)
 library(librarian)
 library(lubridate)
 library(RColorBrewer)
+library(prism)
+library(purrr)
 library(readr)
 library(rnoaa)
 library(sf)
+library(stringr)
 library(tbeptools)
 library(terra)
 library(tidyr)
@@ -401,6 +417,8 @@ Temporal data availability:
 
     -   early
 
+> Daily data are considered "early" for the current month. The previous six months are provisional data. After six months data are considered stable. Thus early data only exist for daily data, while there can be monthly (and presumably yearly) provisional data. -- `?prism::prism_archive_clean`
+
 ```{r}
 #| label: get_prism
 #| messages: false
@@ -485,7 +503,7 @@ leaflet() |>
 ```{r}
 # tbshed_pd <- tbshed |> 
 r <- pd_stack(prism_archive_subset("tmax", "daily")[1])
-crs <- crs(r, proj=T)  # +proj=longlat +ellps=GRS80 +no_defs
+crs <- crs(r, proj=T)  # +proj=longlat +datum=NAD83 +no_defs
 tbshed_pd <- tbsegshed |> 
   st_transform()
 
@@ -525,13 +543,13 @@ library(purrr)
 library(sf)
 library(terra)
 
-n_cores <- parallel::detectCores()
+n_cores <- parallel::detectCores() - 1
 plan(multisession, workers = n_cores)
 
 prism_archive_crop <- function(
   type, temp_period, ...,
   bb  = c(xmin = -82.9, ymin = 27.2, xmax = -81.7, ymax = 28.6),
-  crs = "+proj=longlat +ellps=GRS80 +no_defs",
+  crs = "+proj=longlat +datum=NAD83 +no_defs", # WRONG: "+proj=longlat +ellps=GRS80 +no_defs"
   verbose = F){
 
   ply_bb <- sf::st_bbox(bb, crs = crs) |> 
@@ -550,6 +568,14 @@ prism_archive_crop <- function(
       r_bb <- terra::crop(r, ply_bb, mask = T, touches = T) |>
         terra::trim()
       terra::writeRaster(r_bb, r_bil, filetype = "EHdr", overwrite = T)
+      
+      bb_cropped <- sf::st_bbox(r_bb) |> round(1)
+      if (!all(bb_cropped == bb))
+        warning(glue(
+          "bbox of clipped raster rounded to 1 decimal:
+              {paste(bb_cropped, collapse=', ')}
+           does not match input argument `bb`:
+              {paste(bb, collapse=', ')}"))
     }
   }
 }
@@ -559,8 +585,6 @@ mos  <- 1:12
 vars <- c("tmin", "tmax", "tdmean", "ppt")  
 # skipping: "tmean" [avg(tmin,tmax)], vapor pressure ["vpdmin", "vpdmax"]
 
-
-library(lubridate)
 # ((today() - days(1)) - date("1981-01-01")) |> as.integer() * length(vars) # 63,304 dirs expected in tmp/prism
 n_dirs <- fs::dir_ls(here::here("tmp/prism"), type = "directory") |> length()
 message(glue::glue("{n_dirs} ~ {Sys.time()}"))
@@ -584,12 +608,16 @@ message(glue::glue("ETA: {eta}"))
 # ETA: 2024-05-03 10:20:03.1543
 # ETA: 2024-05-03 11:10:09.588966
 
+prism_set_dl_dir(here::here("tmp/prism"))
+
+yesterday <- today() - days(1)
+
 d_ymv = tibble(
   yr = yrs) |> 
-    cross_join(
-      tibble(mo = mos)) |> 
-    cross_join(
-      tibble(var = vars)) |> 
+  cross_join(
+    tibble(mo = mos)) |> 
+  cross_join(
+    tibble(var = vars)) |> 
   mutate(
     date_beg = map2_chr(yr, mo, \(yr, mo){
       date(glue("{yr}-{mo}-01")) |> 
@@ -597,17 +625,51 @@ d_ymv = tibble(
     date_end = map_chr(date_beg, \(date_beg){
       # date_beg <- "2024-05-01"
       date_end <- (date(date_beg) + months(1)) - days(1)
-      yesterday <- today() - days(1)
       if (date_end > yesterday)
-          date_end <- yesterday
+        date_end <- yesterday
       date_end |> 
         as.character()
     }) ) |> 
-  filter(date(date_beg) < today()) |> 
+  filter(date(date_beg) <= yesterday) |> 
   arrange(date_beg, date_end, var) |> 
   select(date_beg, date_end, var) |> 
-  filter(date(date_beg) >= date("1981-03-01")) # |> 
-  # slice(1:(n_cores*3))
+  # filter(date(date_beg) >= date("1981-03-01")) |> 
+  # rstudio.marinesensitivity.org:
+  # filter(
+  #   date(date_beg) >= date("1981-09-01"),
+  #   date(date_end) <  date("1986-07-01")) # |> 
+  # laptop:
+  # filter(
+  #   date(date_beg) >= date("1986-12-01")) # |>
+  mutate(
+    n_files = pmap_int(list(
+      date_beg = date_beg,
+      date_end = date_end,
+      var      = var), \(date_beg, date_end, var){
+        prism::prism_archive_subset(
+          var, "daily",
+          minDate = date_beg,
+          maxDate = date_end) |>
+          length() }),
+    n_days = map2_int(date_beg, date_end, \(date_beg, date_end){
+      difftime(date(date_end), date(date_beg), units = "days") |>
+        as.integer() }),
+    pct_done = n_files / n_days)
+
+prism_csv <- here("tmp/prism.csv")
+readr::write_csv(d_ymv, prism_csv)
+
+# TODO: delete all extraneous station files
+# find . -name "*_bil.stn.csv" -type f -delete
+
+# TODO: on server remove dir 
+# dir='PRISM_ppt_provisional_4kmD2_20231101_bil'
+# re='PRISM_(.*)_(.*)_(.*)_(.*)_bil'
+# [[ $dir =~ $re ]] && date="${BASH_REMATCH[4]}" && echo "date: $date for $dir"
+# var=${dir//$re/\1}
+# type=${dir//$re/\2}
+# res=${dir//$re/\3}
+# date=${dir//$re/\4}
 
 future_pmap(d_ymv, \(date_beg, date_end, var){
 
@@ -635,19 +697,7 @@ future_pmap(d_ymv, \(date_beg, date_end, var){
 
 # clear future processes
 if (!inherits(plan(), "sequential")) plan(sequential)
-
 ```
-
--   [What is the Dewpoint & How is it Related to Relative Humidity & Heat Index? \| OpenSnow](https://opensnow.com/news/post/what-is-the-dewpoint-how-is-it-related-to-the-relative-humidity-heat-index)\
-    Once the dewpoint reaches above 55 degrees Fahrenheit (°F), the air becomes sticky and can be described as ‘muggy’ above 65°F. If the dewpoint reaches above 75°F, the air can often be described as ‘oppressive’...\
-    The relative humidity is expressed in a percent (0-100%) and is the ratio of the amount of atmospheric moisture present relative to the amount that would be present if the air were saturated. What this means is that the relative humidity is **dependent on both the dewpoint and the air temperature.**
--   [Heat Index Calculation](https://www.wpc.ncep.noaa.gov/html/heatindex.shtml)
-    -   [Heat Index Equation](https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml)
-    -   [It’s Not the Heat …](https://brownmath.com/bsci/notheat.htm#DewpointBackward)\
-        Suppose you know the current temperature and the dew point. Can you get the relative humidity from them? Absolutely!
-    -   [Heat Index | NWS](https://w2.weather.gov/arx/heat_index)
-    - Lawrence (2005) [The Relationship between Relative Humidity and the Dewpoint Temperature in Moist Air: A Simple Conversion and Applications](https://journals.ametsoc.org/view/journals/bams/86/2/bams-86-2-225.xml) _Bulletin of the American Meteorological Society_
-    - [What is Apparent Temperature?](https://meteor.geol.iastate.edu/~ckarsten/bufkit/apparent_temperature.html)
 
 ```{r}
 #| label: crop_prism
@@ -658,6 +708,573 @@ for (var in vars)
   prism_archive_crop(var, "daily")
 
 ```
+
+```{r}
+#| label: prism_bil2tif
+
+library(furrr) # install.packages("furrr")
+
+n_cores <- parallel::detectCores() - 1
+plan(multisession, workers = n_cores)
+
+dir_prism <- here::here("tmp/prism")
+prism_set_dl_dir(dir_prism)
+vars      <- c("tmin", "tmax", "tdmean", "ppt")
+dates_all <- (date("1981-01-01"):(today() - days(1))) |> as.Date()
+
+rx   <- "PRISM_(.*)_(.*)_(.*)_(.*)_bil"
+d_done <- tibble()
+for (var in vars){ # var <- vars[4]
+  
+  pds <- prism::prism_archive_subset(type = var, temp_period = "daily")
+
+  d_var <- tibble(
+    pd = pds) |> 
+    mutate(
+      var   = str_replace(pd, rx, "\\1"),
+      class = str_replace(pd, rx, "\\2"),
+      date  = str_replace(pd, rx, "\\4") |> 
+        as.Date(format = "%Y%m%d") ) 
+  
+  if (nrow(d_done) == 0){
+    d_done <- d_var
+  } else {
+    d_done <- d_done |> 
+      bind_rows(d_var)
+  }
+}
+# table(d_done$var)
+#    ppt tdmean   tmax   tmin 
+#  15759  15807  15746  15805
+
+d_todo <- tibble(
+  var = vars) |> 
+  cross_join(tibble(
+    date = dates_all)) |> 
+  anti_join(
+    d_done |> 
+      select(var, date),
+    by = c("date", "var"))
+  
+prism_dates_crop <- function(
+    var, 
+    dates, 
+    dir_prism = here::here("tmp/prism")){
+  # var = "tmin"; dates = date("2024-05-01"); dir_prism = here::here("tmp/prism")
+  # PRISM_tmin_early_4kmD2_20240509_bil
+  # ls -l | grep -v stable | grep -v provisional | tail
+  # ls -l | grep tmin_stable      | head : PRISM_tmin_stable_4kmD2_19810101_bil
+  # ls -l | grep tmin_stable      | tail : PRISM_tmin_stable_4kmD2_20231031_bil
+  # ls -l | grep tmin_provisional | head : PRISM_tmin_provisional_4kmD2_20231101_bil
+  # ls -l | grep tmin_provisional | tail : PRISM_tmin_provisional_4kmD2_20240430_bil
+  # ls -l | grep tmin_early       | head : PRISM_tmin_early_4kmD2_20240501_bil
+  # ls -l | grep tmin_early       | tail : PRISM_tmin_early_4kmD2_20240509_bil
+  # rm -r PRISM_tmin_stable_4kmD2_19810101_bil \
+  #       PRISM_tmin_stable_4kmD2_20231031_bil \
+  #       PRISM_tmin_provisional_4kmD2_20231101_bil \
+  #       PRISM_tmin_provisional_4kmD2_20240430_bil \
+  #       PRISM_tmin_early_4kmD2_20240501_bil \
+  #       PRISM_tmin_early_4kmD2_20240509_bil
+  # prism_dates_crop(
+  #   "tmin", 
+  #   c("1981-01-01","2023-10-31", "2023-11-01", "2024-04-30", "2024-05-01") # , "2024-05-09"))
+
+  prism_set_dl_dir(dir_prism)
+  
+  # fetch PRISM national rasters
+  # get_prism_dailys(
+  #   type    = var,
+  #   dates   = dates,
+  #   keepZip = F)
+    
+  # remove any duplicates: stable > provisional > early
+  prism_archive_clean(
+    type        = var, 
+    temp_period = "daily", 
+    dates       = dates)
+  
+  # bil <- prism_archive_subset(
+  #   type        = var,
+  #   temp_period = "daily",
+  #   dates       = dates) |>
+  #   pd_to_file()
+  # crs_r <- rast(bil) |> crs(proj=T) 
+  # message(paste(glue("{basename(bil)}: {crs_r}"),"\n"))
+  # early (PRISM_tmin_early_4kmD2_20240509_bil):
+  #   "+proj=longlat +datum=NAD83 +no_defs"
+
+  # trim rasters to bounding box
+  prism_archive_crop(
+    type        = var,
+    temp_period = "daily",
+    dates       = dates)
+}
+
+prism_dates_crop(
+  "tmin",
+  c("1981-01-01","2023-10-31", "2023-11-01", "2024-04-30", "2024-05-01")) # , "2024-05-09"))
+
+
+# 20240430_bil
+# ls -l | grep -v stable | grep -v provisional | tail
+
+d_todo |> 
+  # future_pmap(prism_dates_crop)
+  pmap(prism_dates_crop)
+
+var  <- vars[1] # TODO: loop all vars
+ # check only one crs and bb
+table(d_bils$crs)
+table(d_bils$bb)
+    
+# save daily climatologies ----
+librarian::shelf(
+  fs)
+
+rx   <- "PRISM_(.*)_(.*)_(.*)_(.*)_bil"
+d_bils <- tibble(
+  path = dir_ls(dir_prism, glob = "*.bil", recurse = T)) |> 
+  mutate(
+    pd    = basename(path_bil) |> path_ext_remove(),
+    var   = str_replace(pd, rx, "\\1"),
+    class = str_replace(pd, rx, "\\2"),
+    date  = str_replace(pd, rx, "\\4") |> 
+        as.Date(format = "%Y%m%d"),
+    md    = format(date, "%m-%d"))
+
+crs = "+proj=longlat +datum=NAD83 +no_defs"
+bb  = c(xmin = -82.9, ymin = 27.2, xmax = -81.7, ymax = 28.6)
+ply_bb <- st_bbox(bb, crs = crs(r, proj=T)) |> 
+  st_as_sfc() |> 
+  st_as_sf()
+
+d_bils |> 
+  arrange(md, date, var) |>  # order by: month-day, date, variable
+  select(md, path) |> 
+  group_by(md) |> 
+  nest(paths = path) |> 
+  ungroup() |> 
+  filter(md == "01-01") |> 
+  # pull(md) %>% .[92]
+  # slice(91:93) |> 
+  pwalk(\(md, paths){
+    
+    if (md == "01-01")
+      browser()
+    r_tif <- here(glue("tmp/daily/prism_daily_{md}.tif"))
+    if (file.exists(r_tif)){
+      message(glue("{basename(r_tif)} exists, skipping"))
+      return(NA)
+    }
+    
+    message(glue("{basename(r_tif)} building"))
+    paths |> 
+      mutate(
+        ext = map_chr(
+          path, \(p){ 
+            ext(rast(p)) |> as.vector() |> round(1) |> 
+              paste(collapse=",") } ) ) |> 
+      filter(ext == "-125,-66.5,24.1,49.9") |> 
+      select(path) |>  #  |> basename()
+      # [1] "PRISM_tdmean_stable_4kmD2_19920401_bil.bil"
+      # [2] "PRISM_tdmean_stable_4kmD2_19960401_bil.bil"
+      # [3] "PRISM_ppt_stable_4kmD2_20030401_bil.bil" 
+      pwalk(\(path){
+        r <- terra::rast(path)
+        r_bb <- terra::crop(r, ply_bb, mask = T, touches = T) |>
+          terra::trim()
+        tmp <- tempfile(tempdir(), fileext = ".bil")
+        dir.create(dirname(tmp), recursive = T, showWarnings = F)
+        terra::writeRaster(x = r_bb, filename = tmp, filetype = "EHdr", overwrite = T)
+        terra::writeRaster(rast(tmp), path, filetype = "EHdr", overwrite = T)
+      })
+    
+    r <- rast(unlist(paths))
+    crs(r) <- "+proj=longlat +datum=NAD83 +no_defs"
+    terra::writeRaster(
+      r, r_tif, 
+      datatype = "FLT4S",
+      filetype = "GTiff", gdal = c("COMPRESS=DEFLATE"),
+      overwrite = T)
+  })
+
+# Yay: avg filesize = 0.5 MB * 365/6 (leap day) = 179 MB
+
+r <- rast(r_tif)
+d_r <- tibble(pd = names(r)) |> 
+  mutate(
+    var   = str_replace(pd, rx, "\\1"),
+    class = str_replace(pd, rx, "\\2"),
+    date  = str_replace(pd, rx, "\\4") |> 
+      as.Date(format = "%Y%m%d") ) 
+
+length(names(r)) # 176
+plet(r[[100]], tiles=providers$CartoDB.DarkMatter)
+
+
+
+```
+
+```{r fetch_latest_prism}
+dir_daily <- here::here("data/prism")
+# https://services.nacse.org/prism/data/public/4km/ppt/20240512
+vars      <- c("tmin", "tmax", "tdmean", "ppt")
+prism_beg <- lubridate::date("1981-01-01")
+yesterday <- lubridate::today(tzone = "UTC") - lubridate::days(1)
+dates_all <- (prism_beg:(yesterday)) |> as.Date()
+
+rx_tif <- "prism_daily_([0-9]{2})-([0-9]{2}).tif"
+rx_lyr <- "PRISM_(.*)_(.*)_(.*)_(.*)_bil"
+
+d_done <- tibble::tibble(
+  tif_path = list.files(dir_daily, ".*\\.tif$", full.names = T),
+  tif  = basename(tif_path),
+  tif_md   = stringr::str_replace(tif, rx_tif, "\\1-\\2"),
+  tif_mo   = stringr::str_replace(tif, rx_tif, "\\1"),
+  tif_day  = stringr::str_replace(tif, rx_tif, "\\2") ) |> 
+  dplyr::mutate(
+    lyr = purrr::map(tif_path, \(tif_path) terra::rast(tif_path) |> names() ) ) |> 
+  tidyr::unnest(lyr) |> 
+  dplyr::mutate(
+    lyr_var       = stringr::str_replace(lyr, rx_lyr, "\\1"),
+    lyr_stability = stringr::str_replace(lyr, rx_lyr, "\\2"),
+    lyr_date      = stringr::str_replace(lyr, rx_lyr, "\\4") |> 
+        as.Date(format = "%Y%m%d")) |> 
+  dplyr::arrange(tif_md, lyr_date, lyr_var) # order by: month-day, date, variable
+  
+# rast("tmp/daily/prism_daily_01-01.tif") |> names() |> head()
+# rast("tmp/daily/prism_daily_05-07.tif") |> names()
+
+# define expected stability by date
+early_end  <- lubridate::today(tzone = "UTC") - lubridate::days(1)
+early_beg  <- ym(glue("{year(early_end)}-{month(early_end)}"))
+prov_end   <- early_beg - days(1)
+prov_beg   <- early_beg - months(6)
+stable_end <- prov_beg - days(1)
+stable_beg <- prism_beg
+# early:       2024-05-01 to 2024-05-06
+# provisional: 2023-11-01	to 2024-04-30
+# stable:      1981-01-01 to 2023-10-31
+
+d_todo <- tibble(
+  lyr_var = vars |> sort()) |> 
+  cross_join(
+    tibble(
+      lyr_date = dates_all) |> 
+      mutate(
+        lyr_stability = cut(
+          lyr_date,
+          breaks = c(stable_beg, stable_end, prov_beg, prov_end, early_beg, early_end),
+          labels = c("stable", "stable", "provisional", "provisional", "early"),
+          include.lowest = T) ) ) |> 
+  anti_join(
+    d_done |> 
+      select(lyr_date, lyr_var, lyr_stability) |> 
+      arrange(lyr_date, lyr_var, lyr_stability),
+    by = c("lyr_date", "lyr_var", "lyr_stability")) |> 
+  arrange(lyr_date, lyr_var, lyr_stability)
+
+# 1 ppt     2024-05-07 early
+
+prism_rast_parameters <- function(r){
+  # convert raster names to data frame with components
+  
+  rx <- "PRISM_(.*)_(.*)_(.*)_(.*)_bil"
+  
+  tibble::tibble(
+    idx = 1:terra::nlyr(r),
+    lyr = names(r)) |> 
+    mutate(
+      var       = stringr::str_replace(lyr, rx, "\\1"),
+      stability = stringr::str_replace(lyr, rx, "\\2"),
+      date      = stringr::str_replace(lyr, rx, "\\4") |> 
+        as.Date(format = "%Y%m%d"))
+}
+
+prism_get_daily <- function(
+    var, date, 
+    dir_daily = here::here("tmp/daily"),
+    crs_proj  = "+proj=longlat +datum=NAD83 +no_defs",
+    bb        = c(xmin = -82.9, ymin = 27.2, xmax = -81.7, ymax = 28.6)){
+  # var="ppt"; date = as.Date("2024-05-07")
+  # var="tmax"; date = as.Date("1981-01-01")
+  
+  u <- glue("https://services.nacse.org/prism/data/public/4km/{var}/{format(date, '%Y%m%d')}")
+
+  ply_bb <- sf::st_bbox(bb, crs = terra::crs(r, proj=T)) |> 
+    sf::st_as_sfc() |> 
+    sf::st_as_sf()
+  
+  # date = as.Date("1981-01-01"); var = "tdmean"
+  z <- glue("{dir_daily}/temp_{date}_{var}.zip")
+  message(glue("  Downloading PRISM daily {date} {var}"))
+  download.file(u, z)
+  
+  # If downloaded zip < 1 KB, probably this error:
+  #   You have tried to download the file PRISM_tdmean_stable_4kmD2_19810101_bil.zip more than twice in one day (Pacific local time).  Note that repeated offenses may result in your IP address being blocked.
+  if (file.size(z) < 1000)
+    stop(readLines(z, warn=F))
+  
+  dir_z <- fs::path_ext_remove(z)
+  dir.create(dir_z, showWarnings = F)
+  unzip(z, exdir = dir_z)
+  unlink(z)
+  
+  r_new <- list.files(dir_z, "PRISM_.*_bil\\.bil$", full.names = T) |> 
+    # file.exists()
+    terra::rast() |> 
+    terra::crop(ply_bb, mask = T, touches = T) |>
+    terra::trim()
+  terra::crs(r) <- crs_proj
+  
+  md_tif <- sprintf("%s/prism_daily_%02d-%02d.tif", dir_daily, month(date), day(date))
+  
+  if (!file.exists(md_tif)){
+    terra::writeRaster(
+        r_new, md_tif, 
+        datatype = "FLT4S",
+        filetype = "GTiff", gdal = c("COMPRESS=DEFLATE"),
+        overwrite = T)
+    dir_delete(dir_z)
+    return(T)
+  }
+  
+  r_md  <- rast(md_tif)
+  df_md <- prism_rast_parameters(r_md)
+  
+  # remove old date-var, eg for stability improved
+  i_lyr_rm <- df_md |> 
+    filter(
+      date == !!date,
+      var  == !!var) |> 
+    pull(idx)
+  if (length(i_lyr_rm) > 0)
+    r_md <- terra::subset(r_md, i_lyr_rm, negate = T)
+
+  # combine old and new
+  r_md <- c(r_md, r_new)
+  
+  # write out
+  tmp <- tempfile(fileext = ".tif")
+  terra::writeRaster(
+    r_md, tmp,
+    datatype = "FLT4S",
+    filetype = "GTiff", gdal = c("COMPRESS=DEFLATE"),
+    overwrite = T)
+  terra::writeRaster(
+    rast(tmp), md_tif, 
+    datatype = "FLT4S",
+    filetype = "GTiff", gdal = c("COMPRESS=DEFLATE"),
+    overwrite = T)
+  dir_delete(dir_z)
+  unlink(tmp)
+  return(T)
+}
+
+# rast("tmp/daily/prism_daily_01-01.tif") |> names()
+
+d_todo |> 
+  select(var = lyr_var, date = lyr_date) |> 
+  filter(
+    !(var == "tdmean" & date == as.Date("1981-01-01")),
+    !(var == "ppt"    & date == as.Date("2024-05-07"))) |> 
+  pwalk(prism_get_daily)
+```
+
+```
+# early:       2024-05-01 to 2024-05-06
+# provisional: 2023-11-01	to 2024-04-30
+# stable:      1981-01-01 to 2023-10-31
+# https://prism.nacse.org/documents/PRISM_downloads_web_service.pdf
+# PRISM_<var>_<stability>_<scale&version>_<time period>[_all|_annual]_bil.zip
+# https://services.nacse.org/prism/data/public/4km/<element>/<date><?format=[nc|asc|grib2]>
+# https://services.nacse.org/prism/data/public/4km/tmin/20090405
+# https://prism.oregonstate.edu/documents/PRISM_update_schedule.pdf
+
+# dates <- gen_dates(minDate = minDate, maxDate = maxDate, dates = dates)
+dates <- date("2024-05-12")
+# prism:::prism_vars() |> sort()
+service <- "http://services.nacse.org/prism/data/public/4km"
+type = "ppt"
+uri_dates <- gsub(pattern = "-",replacement = "",dates)
+# uris <- prism:::gen_prism_url(uri_dates, type, service)
+uris <- paste(service, type, dates, sep = "/")
+# "http://services.nacse.org/prism/data/public/4km/ppt/2024-05-12"
+
+x <- httr::HEAD(uris[1])
+fn <- x$headers$`content-disposition`
+fn <- regmatches(fn,regexpr('\\"[a-zA-Z0-9_\\.]+',fn))
+fn <- substr(fn,2,nchar((fn)))
+fn <- gsub("provisional|early", "stable", fn)
+file_names <- stringr::str_replace(
+  fn, 
+  "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]", 
+  uri_dates
+)
+to_download_lgl <- prism_check(file_names, lgl = TRUE)
+uris <- uris[to_download_lgl]
+
+get_prism_dailys <- function(type, minDate = NULL, maxDate =  NULL, 
+                             dates = NULL, keepZip = TRUE, check = "httr",
+                             service = NULL)
+```
+
+
+[PRISM datasets](https://prism.oregonstate.edu/documents/PRISM_datasets.pdf):
+
+> AN - Daily Time Series (AN81d/AN91d)
+> Climate elements: tmin, tmax, tmean (derived), tdmean, ppt, vpdmin, vpdmax
+> Units and scaling: tmin, tmax, tmean, tdmean (deg C); ppt (mm); vpdmin, vpdmax (hPa); all values are floating point
+> Description: Daily dataset covering the conterminous US, starting on 1 January 1981 and ending yesterday.
+
+[PRISM_update_schedule](https://prism.oregonstate.edu/documents/PRISM_update_schedule.pdf):
+
+1. asdf
+> The PRISM map sequence is first updated to include a particular day about 24 hours after it has
+ended (Grid Count = 1).
+> Note that a “PRISM Day” is defined as the 24-hour period ending at 1200 UTC on that day, e.g., a grid for July 2 covers the period 1200 UTC July 1 – 1200 UTC July 2
+
+2. asdf
+> A second update (Grid Count = 2) is made after five days have elapsed; the five-day
+milestone was chosen because a large amount of new station data is typically received at this
+point.
+
+3. 
+
+> The third update (Grid Count = 3) is produced during what is termed the “monthly update,” which is typically completed on about the 15th of the following month.
+
+## Map Swipe Yesterday vs Climatology
+
+```{r}
+#| label: calc_climatologies
+
+prism_set_dl_dir(here::here("tmp/prism"))
+
+var = "tmax"
+date <- today() - days(1)  # yesterday
+yrs <- 1981:(1981+20) # 20 yr climatology
+dates <- sprintf("%d-%02d-%02d", yrs, month(date), day(date))
+pds <- prism::prism_archive_subset(var, "daily", dates = dates)
+
+# web mercator for use with slippy maps
+proj4_3857 <- "+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs +type=crs"
+
+r_c <- pd_stack(pds) |> 
+  raster::projectRaster(crs = proj4_3857) |> 
+  rast() |> 
+  mean(na.rm=T)
+names(r_c) <- glue("{var}_historical")
+# plot(r_c)
+
+# get_prism_dailys(type = var, dates = date, keepZip = F)
+# prism_archive_clean(var, "daily", dates = date)
+# prism_archive_crop(var, "daily", dates = date)
+
+pd <- prism::prism_archive_subset(var, "daily", dates = date)
+r_d <- pd_stack(pd) |> 
+  raster::projectRaster(crs = proj4_3857) |> 
+  rast()
+names(r_d) <- var
+# plot(r_d)
+# plet(r_d, tiles=providers$Esri.OceanBasemap)
+
+vals <- c(values(r_c, na.rm=T), values(r_d, na.rm=T))
+pal <- colorNumeric(
+  "Spectral", vals, reverse = T, na.color = "transparent")
+
+# leaflet() |> 
+#   addProviderTiles(
+#     providers$Stadia.StamenTonerLite) |> 
+#   addRasterImage(
+#     # r_c, colors = pal, opacity = 0.8, project = F) |> 
+#     r_d, colors = pal, opacity = 0.8, project = F) |> 
+#   addLegend(
+#     pal = pal, values = vals, title = var)
+
+leaflet() |> 
+  addMapPane("left",  zIndex = 0) |>
+  addMapPane("right", zIndex = 0) |>
+  addProviderTiles(
+    providers$CartoDB.DarkMatter,
+    options = pathOptions(pane = "left"),
+    group   = "base", 
+    layerId = "base_l") |> 
+  addProviderTiles(
+    providers$CartoDB.DarkMatter,
+    options = pathOptions(pane = "right"),
+    group   = "base", 
+    layerId = "base_r") |> 
+  addRasterImage(
+    r_c, colors = pal, opacity = 0.8, project = F,
+    options = leafletOptions(pane = "left"),
+    group = "r_c") |> 
+  addRasterImage(
+    r_d, colors = pal, opacity = 0.8, project = F,
+    options = leafletOptions(pane = "right"),
+    group = "r_d") |> 
+  addLayersControl(overlayGroups = c("r_c", "r_d")) |>  
+  addSidebyside(
+    layerId = "sidecontrols",
+    leftId  = "base_l",
+    rightId = "base_r") |>
+  addControl(
+    HTML(glue(
+      "<b>Historical</b><br>
+      ({paste(range(yrs), collapse = '-')})-{str_pad(month(date),2,pad='0')}-{str_pad(day(date),2,pad='0')}")), 
+    position = "topleft") |> 
+  addControl(
+    HTML(glue(
+      "<b>Yesterday</b><br>
+      {date}")), 
+    position = "topright") |> 
+  # leaflet() |> 
+  # addTiles() |> 
+  addPolygons(
+    data = tbeptools::tbsegshed, 
+    color="white", weight = 2, fillOpacity=0) |> 
+  # mapview::mapView()
+  addLegend(
+    pal = pal, values = vals, title = var)
+
+d_c <- terra::extract(
+  r_c,
+  tbeptools::tbsegshed,
+  exact = T, touches = T, method = "bilinear",
+  bind = T,
+  mean, na.rm=T) |> 
+  st_as_sf() |> 
+  st_drop_geometry()
+
+d_d <- terra::extract(
+  r_d,
+  tbeptools::tbsegshed,
+  exact = T, touches = T, method = "bilinear",
+  bind = T,
+  mean, na.rm=T) |> 
+  st_as_sf() |> 
+  st_drop_geometry()
+
+d <- d_c |> 
+  left_join(
+    d_d,
+    by = c("long_name", "bay_segment"))
+d
+```
+
+options(repos=c(CRAN="https://cran.rstudio.com/")); renv::snapshot()
+
+### Dewpoint to Humidity
+
+-   [What is the Dewpoint & How is it Related to Relative Humidity & Heat Index? \| OpenSnow](https://opensnow.com/news/post/what-is-the-dewpoint-how-is-it-related-to-the-relative-humidity-heat-index)\
+    Once the dewpoint reaches above 55 degrees Fahrenheit (°F), the air becomes sticky and can be described as ‘muggy’ above 65°F. If the dewpoint reaches above 75°F, the air can often be described as ‘oppressive’...\
+    The relative humidity is expressed in a percent (0-100%) and is the ratio of the amount of atmospheric moisture present relative to the amount that would be present if the air were saturated. What this means is that the relative humidity is **dependent on both the dewpoint and the air temperature.**
+-   [Heat Index Calculation](https://www.wpc.ncep.noaa.gov/html/heatindex.shtml)
+    -   [Heat Index Equation](https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml)
+    -   [It’s Not the Heat …](https://brownmath.com/bsci/notheat.htm#DewpointBackward)\
+        Suppose you know the current temperature and the dew point. Can you get the relative humidity from them? Absolutely!
+    -   [Heat Index \| NWS](https://w2.weather.gov/arx/heat_index)
+    -   Lawrence (2005) [The Relationship between Relative Humidity and the Dewpoint Temperature in Moist Air: A Simple Conversion and Applications](https://journals.ametsoc.org/view/journals/bams/86/2/bams-86-2-225.xml) *Bulletin of the American Meteorological Society*
+    -   [What is Apparent Temperature?](https://meteor.geol.iastate.edu/~ckarsten/bufkit/apparent_temperature.html)
 
 TODO: - \[ \] summarize by tbeptools::tbsegshed, zip code - \[ \] compare these precip data w/ Water District data to make case for using PRISM data
 
