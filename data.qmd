@@ -6,6 +6,21 @@ editor_options:
 
 # Data
 
+Themes for indicators seeking relevance to:
+- Land & Sea
+- People & Ecosystems
+
+Icons
+- Bootstrap
+  - [water](https://icons.getbootstrap.com/icons/water/)
+  - [thermometer](https://icons.getbootstrap.com/icons/thermometer/)
+    - [moisture](https://icons.getbootstrap.com/icons/moisture/)
+    - [thermometer-sun](https://icons.getbootstrap.com/icons/thermometer-sun/)
+  - [cloud-rain-heavy-fill](https://icons.getbootstrap.com/icons/cloud-rain-heavy-fill/)
+  - [tornado](https://icons.getbootstrap.com/icons/tornado/)
+- Fontawesome
+  - [water-rise](https://fontawesome.com/v5/icons/water-rise?f=classic&s=solid) PRO
+
 ## Task 1. Assessment of available data and coverage
 
 Data descriptive of the risks of climate change can be obtained from several sources. These may include weather or climatological data, long-term tidal gauge data, or in situ water measurements responsive to climate change. Weather and climatological data could be obtained from local weather stations with long-term data, e.g., Tampa International Airport, and could include measures of air temperature, precipitation, and/or storm intensity/frequency. Tidal gauge data are readily available from the NOAA PORTS data retrieval system. Lastly, in situ water measurements could include water temperature, changes in flow hydrology, salinity, and/or pH. Data used to evaluate potential risks related to ocean acidification should also be explored.
@@ -916,11 +931,17 @@ plet(r[[100]], tiles=providers$CartoDB.DarkMatter)
 ```
 
 ```{r fetch_latest_prism}
+librarian::shelf(
+  dplyr, fs, glue, here, lubridate, purrr, sf, stringr, terra, tibble, tidyr)
+
 dir_daily <- here::here("data/prism")
 # https://services.nacse.org/prism/data/public/4km/ppt/20240512
 vars      <- c("tmin", "tmax", "tdmean", "ppt")
 prism_beg <- lubridate::date("1981-01-01")
-yesterday <- lubridate::today(tzone = "UTC") - lubridate::days(1)
+# yesterday <- lubridate::today(tzone = "UTC") - lubridate::days(1)
+# accommodate up to 12 hrs to publish yesterday
+yesterday_tz <- "Etc/GMT+12"
+yesterday <- lubridate::today(tzone = yesterday_tz) - lubridate::days(1)
 dates_all <- (prism_beg:(yesterday)) |> as.Date()
 
 rx_tif <- "prism_daily_([0-9]{2})-([0-9]{2}).tif"
@@ -942,37 +963,34 @@ d_done <- tibble::tibble(
         as.Date(format = "%Y%m%d")) |> 
   dplyr::arrange(tif_md, lyr_date, lyr_var) # order by: month-day, date, variable
   
-# rast("tmp/daily/prism_daily_01-01.tif") |> names() |> head()
-# rast("tmp/daily/prism_daily_05-07.tif") |> names()
-
 # define expected stability by date
 early_end  <- lubridate::today(tzone = "UTC") - lubridate::days(1)
-early_beg  <- ym(glue("{year(early_end)}-{month(early_end)}"))
+early_beg  <- lubridate::ym(glue::glue("{lubridate::year(early_end)}-{lubridate::month(early_end)}"))
 prov_end   <- early_beg - days(1)
 prov_beg   <- early_beg - months(6)
 stable_end <- prov_beg - days(1)
 stable_beg <- prism_beg
-# early:       2024-05-01 to 2024-05-06
-# provisional: 2023-11-01	to 2024-04-30
-# stable:      1981-01-01 to 2023-10-31
+# early:       2024-05-01 to 2024-05-06 (this month)
+# provisional: 2023-11-01	to 2024-04-30 (previous 6 months)
+# stable:      1981-01-01 to 2023-10-31 (before 6 months)
 
-d_todo <- tibble(
+d_todo <- tibble::tibble(
   lyr_var = vars |> sort()) |> 
-  cross_join(
-    tibble(
+  dplyr::cross_join(
+    tibble::tibble(
       lyr_date = dates_all) |> 
-      mutate(
+      dplyr::mutate(
         lyr_stability = cut(
           lyr_date,
           breaks = c(stable_beg, stable_end, prov_beg, prov_end, early_beg, early_end),
           labels = c("stable", "stable", "provisional", "provisional", "early"),
           include.lowest = T) ) ) |> 
-  anti_join(
+  dplyr::anti_join(
     d_done |> 
-      select(lyr_date, lyr_var, lyr_stability) |> 
-      arrange(lyr_date, lyr_var, lyr_stability),
+      dplyr::select(lyr_date, lyr_var, lyr_stability) |> 
+      dplyr::arrange(lyr_date, lyr_var, lyr_stability),
     by = c("lyr_date", "lyr_var", "lyr_stability")) |> 
-  arrange(lyr_date, lyr_var, lyr_stability)
+  dplyr::arrange(lyr_date, lyr_var, lyr_stability)
 
 # 1 ppt     2024-05-07 early
 
@@ -993,25 +1011,24 @@ prism_rast_parameters <- function(r){
 
 prism_get_daily <- function(
     var, date, 
-    dir_daily = here::here("tmp/daily"),
+    dir_daily = here::here("data/prism"),
     crs_proj  = "+proj=longlat +datum=NAD83 +no_defs",
     bb        = c(xmin = -82.9, ymin = 27.2, xmax = -81.7, ymax = 28.6)){
-  # var="ppt"; date = as.Date("2024-05-07")
-  # var="tmax"; date = as.Date("1981-01-01")
-  
-  u <- glue("https://services.nacse.org/prism/data/public/4km/{var}/{format(date, '%Y%m%d')}")
 
-  ply_bb <- sf::st_bbox(bb, crs = terra::crs(r, proj=T)) |> 
+  u <- glue::glue("https://services.nacse.org/prism/data/public/4km/{var}/{format(date, '%Y%m%d')}")
+
+  ply_bb <- sf::st_bbox(bb, crs = crs_proj) |> 
     sf::st_as_sfc() |> 
     sf::st_as_sf()
   
   # date = as.Date("1981-01-01"); var = "tdmean"
-  z <- glue("{dir_daily}/temp_{date}_{var}.zip")
-  message(glue("  Downloading PRISM daily {date} {var}"))
-  download.file(u, z)
+  z <- glue::glue("{dir_daily}/temp_{date}_{var}.zip")
+  message(glue::glue("Downloading PRISM daily {date} {var}"))
+  download.file(u, z, quiet = T)
   
-  # If downloaded zip < 1 KB, probably this error:
-  #   You have tried to download the file PRISM_tdmean_stable_4kmD2_19810101_bil.zip more than twice in one day (Pacific local time).  Note that repeated offenses may result in your IP address being blocked.
+  # If downloaded zip < 1 KB, assume one of these errors:
+  # - You have tried to download the file PRISM_tdmean_stable_4kmD2_19810101_bil.zip more than twice in one day (Pacific local time).  Note that repeated offenses may result in your IP address being blocked.
+  # - Invalid date: 20240513</br>Valid day ranges for the given month are 1 to 12 [real reason: requesting beyond available date, ie not yet published]
   if (file.size(z) < 1000)
     stop(readLines(z, warn=F))
   
@@ -1025,10 +1042,10 @@ prism_get_daily <- function(
     terra::rast() |> 
     terra::crop(ply_bb, mask = T, touches = T) |>
     terra::trim()
-  terra::crs(r) <- crs_proj
+  terra::crs(r_new) <- crs_proj
   
   md_tif <- sprintf("%s/prism_daily_%02d-%02d.tif", dir_daily, month(date), day(date))
-  
+
   if (!file.exists(md_tif)){
     terra::writeRaster(
         r_new, md_tif, 
@@ -1066,24 +1083,25 @@ prism_get_daily <- function(
     datatype = "FLT4S",
     filetype = "GTiff", gdal = c("COMPRESS=DEFLATE"),
     overwrite = T)
-  dir_delete(dir_z)
+  fs::dir_delete(dir_z)
   unlink(tmp)
   return(T)
 }
 
-# rast("tmp/daily/prism_daily_01-01.tif") |> names()
+msg <- ifelse(
+  nrow(d_todo) > 0,
+  glue::glue("Summary: {nrow(d_todo)} variable-dates {paste(range(d_todo$lyr_date), collapse=' to ')} to download and crop "),
+  glue::glue("Summary: up to date as of yesterday ({yesterday_tz}): {yesterday}"))
+message(msg)
 
 d_todo |> 
   select(var = lyr_var, date = lyr_date) |> 
-  filter(
-    !(var == "tdmean" & date == as.Date("1981-01-01")),
-    !(var == "ppt"    & date == as.Date("2024-05-07"))) |> 
   pwalk(prism_get_daily)
 ```
 
-```
+```         
 # early:       2024-05-01 to 2024-05-06
-# provisional: 2023-11-01	to 2024-04-30
+# provisional: 2023-11-01   to 2024-04-30
 # stable:      1981-01-01 to 2023-10-31
 # https://prism.nacse.org/documents/PRISM_downloads_web_service.pdf
 # PRISM_<var>_<stability>_<scale&version>_<time period>[_all|_annual]_bil.zip
@@ -1119,27 +1137,17 @@ get_prism_dailys <- function(type, minDate = NULL, maxDate =  NULL,
                              service = NULL)
 ```
 
-
 [PRISM datasets](https://prism.oregonstate.edu/documents/PRISM_datasets.pdf):
 
-> AN - Daily Time Series (AN81d/AN91d)
-> Climate elements: tmin, tmax, tmean (derived), tdmean, ppt, vpdmin, vpdmax
-> Units and scaling: tmin, tmax, tmean, tdmean (deg C); ppt (mm); vpdmin, vpdmax (hPa); all values are floating point
-> Description: Daily dataset covering the conterminous US, starting on 1 January 1981 and ending yesterday.
+> AN - Daily Time Series (AN81d/AN91d) Climate elements: tmin, tmax, tmean (derived), tdmean, ppt, vpdmin, vpdmax Units and scaling: tmin, tmax, tmean, tdmean (deg C); ppt (mm); vpdmin, vpdmax (hPa); all values are floating point Description: Daily dataset covering the conterminous US, starting on 1 January 1981 and ending yesterday.
 
 [PRISM_update_schedule](https://prism.oregonstate.edu/documents/PRISM_update_schedule.pdf):
 
-1. asdf
-> The PRISM map sequence is first updated to include a particular day about 24 hours after it has
-ended (Grid Count = 1).
-> Note that a “PRISM Day” is defined as the 24-hour period ending at 1200 UTC on that day, e.g., a grid for July 2 covers the period 1200 UTC July 1 – 1200 UTC July 2
+1.  asdf \> The PRISM map sequence is first updated to include a particular day about 24 hours after it has ended (Grid Count = 1). \> Note that a “PRISM Day” is defined as the 24-hour period ending at 1200 UTC on that day, e.g., a grid for July 2 covers the period 1200 UTC July 1 – 1200 UTC July 2
 
-2. asdf
-> A second update (Grid Count = 2) is made after five days have elapsed; the five-day
-milestone was chosen because a large amount of new station data is typically received at this
-point.
+2.  asdf \> A second update (Grid Count = 2) is made after five days have elapsed; the five-day milestone was chosen because a large amount of new station data is typically received at this point.
 
-3. 
+3.  
 
 > The third update (Grid Count = 3) is produced during what is termed the “monthly update,” which is typically completed on about the 15th of the following month.
 
@@ -1163,7 +1171,7 @@ r_c <- pd_stack(pds) |>
   raster::projectRaster(crs = proj4_3857) |> 
   rast() |> 
   mean(na.rm=T)
-names(r_c) <- glue("{var}_historical")
+names(r_c) <- glue::glue("{var}_historical")
 # plot(r_c)
 
 # get_prism_dailys(type = var, dates = date, keepZip = F)
@@ -1302,15 +1310,212 @@ Types of data:
 
 ![Screenshot of NOAA's [Sea Level Trends](https://tidesandcurrents.noaa.gov/sltrends/sltrends.html) zoomed into the Tampa Bay.](figures/slr_tidesandcurrents.noaa.gov-sltrends.png){#fig-slr-noaa}
 
+https://tidesandcurrents.noaa.gov/sltrends/
+
 -   [PORTS: Tampa Bay PORTS - NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/ports/index.html?port=tb)
+
+-   [api.tidesandcurrents.noaa.gov](https://api.tidesandcurrents.noaa.gov/api/prod/)
+
+-   [CO-OPS Data Retrieval API](https://api.tidesandcurrents.noaa.gov/api/prod/)
+
+-   [CO-OPS Metadata API v1.0](https://api.tidesandcurrents.noaa.gov/mdapi/prod/)
+
+https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/id.extension https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/8726724.json https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/8726724/details.json - "established": "1973-04-19 00:00:00.0" - "origyear": "1995-07-27 23:00:00.0" https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/8726724/products.json - "name": "Water Levels", - "value": "https://tidesandcurrents.noaa.gov/waterlevels.html?id=8726724"
+
+https://tidesandcurrents.noaa.gov/sltrends/sltrends_station.shtml?id=8726724 https://tidesandcurrents.noaa.gov/sltrends/data/8726724_meantrend.csv
+
+[Inundation History - NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/inundationdb/inundation.html?id=8726724#flooddays)
+
+- [FAQ for Sea Level Trends | NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/sltrends/faq.html#:~:text=Relative%20Sea%20Level%20Trends%20reflect%20changes,stations%2C%20called%20monthly%20mean%20sea%20level.)
+  > **Relative Sea Level Trends** reflect changes in local sea level over time and are typically the most critical sea level trend for many coastal applications, including coastal mapping, marine boundary delineation, coastal zone management, coastal engineering, sustainable habitat restoration design, and the general public enjoying their favorite beach. This website focuses on relative sea level trends, computed from monthly averages of hourly water levels observed at specific tide stations, called **monthly mean sea level**.
+
+- [Tidal Datums | NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/datum_options.html)
+-  Water Level Monthly Mean Data
+-  Date Time	Date and time of the data
+-  MHHW	Mean Higher-High Water
+-  MHW	Mean High Water
+-  DTL	Mean Diurnal Tide Level
+-  MTL	Mean Tide Level
+-  MSL	Mean Sea Level
+-  MLW	Mean Low Water
+-  MLLW	Mean Lower-Low Water
+-  GT	Great Diurnal Range
+-  MN	Mean Range of Tide
+-  DHQ	Mean Diurnal High Water Inequality
+-  DLQ	Mean Diurnal Low Water Inequality
+-  HWI	Greenwich High Water Interval (in Hours)
+-  LWI	Greenwich Low Water Interval (in Hours)
+-  highest	Highest Tide
+-  lowest	Lowest Tide
+-  inferred	A flag that when set to 1 indicates that the water level value has been inferred
+
+
+```{r}
+
+
+library(glue)
+
+station_id
+slr_csv <- "https://tidesandcurrents.noaa.gov/sltrends/data/{station_id}_meantrend.csv"
+slr_csv <- "https://tidesandcurrents.noaa.gov/sltrends/data/8726724_meantrend.csv"
+
+rm(d)
+d <- suppressWarnings(
+  request("https://tidesandcurrents.noaa.gov") |> 
+    req_url_path_append(
+      "sltrends", "data", 
+      glue("{station_id}_meantrend.csv")) |> 
+    req_perform() |> 
+    resp_body_string() |> 
+    read_csv(
+      skip           = 5, 
+      name_repair    = "unique_quiet",
+      show_col_types = F) ) 
+# names(d) |> paste(collapse = ", ")
+# Year, Month, Monthly_MSL, Linear_Trend, High_Conf., Low_Conf.
+
+problems(d)
+
+```
+
+https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/id.extension 
+https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290.json https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/id/resource.extension https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/8726724/datums.json "units": "feet", "datums": "name": "MSL", "description": "Mean Sea Level", "value": 3.2 "min": -0.84, "mindate": "19770119", "mintime": "08:06", "max": 8.491, "maxdate": "19930313", "maxtime": "04:48",
+
+https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/ports.extension https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/ports.json
 
 ```{r}
 librarian::shelf(
-  ropensci/rnoaa)
-# register with renv
-library(rnoaa)
+  dplyr, httr2, purrr, readr, tibble)
+# # register with renv
+# library(dplyr)
+# library(httr2)
+# library(readr)
+# # library(rnoaa)
+# library(tibble)
+
+d_csv <- here::here("data/slr/monthly_sea_levels.csv")
+
+d_stations <- tribble(
+  ~station_id, ~station_name,
+  8726724    , "Clearwater Beach",
+  8726674    , "East Bay",
+  8726384    , "Port Manatee",
+  8726520    , "St. Petersburg")
+
+get_station_data <- function(station_id){
+  httr2::request("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter") |> 
+    httr2::req_url_query(
+      station     = station_id,
+      begin_date  = 19010101,
+      end_date    = lubridate::today()  |> format("%Y%m%d") |> as.integer(), 
+      product     = "monthly_mean", # maxdur = 3653 days (10 yrs)
+      datum       = "stnd",
+      time_zone   = "lst",    # local time
+      units       = "metric", # meters
+      format      = "csv") |> 
+    httr2::req_perform() |> 
+    httr2::resp_body_string() |>
+    readr::read_csv(
+      name_repair    = "unique_quiet",
+      show_col_types = F)
+}
+
+d <- d_stations |> 
+  dplyr::mutate(
+    data = purrr::map(station_id, get_station_data)) |> 
+  tidyr::unnest(data)
+
+write_csv(d, d_csv)
+
+# d
+# # A tibble: 1,868 × 20
+#    station_id station_name      Year Month Highest  MHHW   MHW   MSL   MTL   MLW
+#         <dbl> <chr>            <dbl> <dbl>   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
+#  1    8726724 Clearwater Beach  1973     5    1.55  1.38  1.26 0.96  0.96  0.658
+#  2    8726724 Clearwater Beach  1973     6    1.61  1.38  1.25 0.951 0.954 0.655
+#  3    8726724 Clearwater Beach  1973     7    1.58  1.38  1.25 0.951 0.942 0.631
+#  4    8726724 Clearwater Beach  1973     8    1.57  1.40  1.28 0.981 0.972 0.668
+#  5    8726724 Clearwater Beach  1973     9    1.54  1.43  1.33 1.04  1.03  0.732
+#  6    8726724 Clearwater Beach  1973    10    1.66  1.38  1.29 1.02  1.02  0.747
+#  7    8726724 Clearwater Beach  1973    11    1.64  1.40  1.29 1.01  1.02  0.753
+#  8    8726724 Clearwater Beach  1973    12    1.53  1.28  1.16 0.896 0.893 0.622
+#  9    8726724 Clearwater Beach  1974     1    1.53  1.30  1.16 0.872 0.866 0.573
+# 10    8726724 Clearwater Beach  1974     2    1.61  1.27  1.15 0.869 0.863 0.579
+# # ℹ 1,858 more rows
+# # ℹ 10 more variables: MLLW <dbl>, DTL <dbl>, GT <dbl>, MN <dbl>, DHQ <dbl>,
+# #   DLQ <dbl>, HWI <dbl>, LWI <dbl>, Lowest <dbl>, Inferred <dbl>
+# # ℹ Use `print(n = ...)` to see more rows
+# names(d) |> paste(collapse=", ")
+# station_id, station_name, Year, Month, Highest, MHHW, MHW, MSL, MTL, MLW, MLLW, DTL, GT, MN, DHQ, DLQ, HWI, LWI, Lowest, Inferred
+# 
+# https://tidesandcurrents.noaa.gov/axis/webservices/waterlevelverifiedmonthly/response.jsp?stationId=8726724&beginDate=20220201&endDate=20240514&datum=MSL&unit=0&timeZone=0&format=html&Submit=Submit
+
+```
+
+-   [Sea Level Trends - NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/sltrends/sltrends.html)
+
+1.  Clearwater Beach, FL\
+    `8726724`\
+    The relative sea level trend is 4.33 mm/year with a 95% confidence interval of +/- 0.52 mm/year based on monthly mean sea level data from 1973 to 2023 which is equivalent to a change of 1.42 feet in 100 years.
+
+-   [Relative Sea Level Trend](https://tidesandcurrents.noaa.gov/sltrends/sltrends_station.shtml?id=8726724)
+-   [Annual Mean Relative Sea Level](https://tidesandcurrents.noaa.gov/sltrends/sltrends_station.shtml?plot=scenario&id=8726724)
+-   [Interannual Variation](https://tidesandcurrents.noaa.gov/sltrends/sltrends_station.shtml?plot=intannvar&id=8726724)
+-   [Average Seasonal Cycle](https://tidesandcurrents.noaa.gov/sltrends/sltrends_station.shtml?plot=seasonal&id=8726724)
+-   [Timelapse – Google Earth Engine](https://earthengine.google.com/timelapse/#v=27.978,-82.832,12,latLng&t-3)
+
+1.  East Bay, FL\
+    `8726674`\
+    The relative sea level trend is 5.8 mm/year with a 95% confidence interval of +/- 0.85 mm/year based on monthly mean sea level data from 1976 to 2023 which is equivalent to a change of 1.90 feet in 100 years.
+2.  Port Manatee, FL\
+    `8726384`\
+    The relative sea level trend is 5.5 mm/year with a 95% confidence interval of +/- 0.68 mm/year based on monthly mean sea level data from 1976 to 2023 which is equivalent to a change of 1.80 feet in 100 years.
+3.  St. Petersburg, FL\
+    `8726520`\
+    The relative sea level trend is 3.09 mm/year with a 95% confidence interval of +/- 0.23 mm/year based on monthly mean sea level data from 1947 to 2023 which is equivalent to a change of 1.01 feet in 100 years.
+
+-   [Inundation Dashboard - NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/inundationdb/)
+
+### Hurricanes
+
+-   property damage
+
+```{r}
+
+rnoaa::coops_search()
+# swdi - Severe Weather Data Inventory (SWDI) vignette
+
+```
+
+### Sea Surface Temperature
+
+-   coral reefs: ecosystem health, ecotourism
+
+-   fisheries
+
+-   energy for hurricanes
+
+-   background: [NOAA Coral Reef Watch Tutorial](https://coralreefwatch.noaa.gov/product/5km/tutorial/crw05a_sst_product.php)
+    - [ERDDAP - Sea Surface Temperature, NOAA Coral Reef Watch Daily Global 5km Satellite SST (CoralTemp), 1985-present, Daily - Data Access Form](https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstDaily.html)
 
 
+```{r}
+
+librarian::shelf(
+  sf, tbeptools, mapview)
+
+tbshed_buf <- tbshed |> 
+  st_buffer(10000) |> 
+  st_bbox() |> 
+  st_as_sfc() |> 
+  st_as_sf()
+  
+# st_bbox(tbshed_buf) |> round(1)
+#  xmin  ymin  xmax  ymax 
+# -83.0  27.3 -81.8  28.5
+
+mapView(tbshed, col.regions="gray") + 
+  mapView(tbshed_buf)
 
 ```
 
