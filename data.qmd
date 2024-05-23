@@ -7,7 +7,7 @@ editor_options:
 # Data
 
 Themes for indicators seeking relevance to:
-- Land & Sea
+- Air & Sea
 - People & Ecosystems
 
 Icons
@@ -68,7 +68,9 @@ library(webshot2)
 options(readr.show_col_types = F)
 ```
 
-## Temperature
+## Air
+
+noaacrwsstDaily
 
 ### Observed
 
@@ -387,7 +389,7 @@ p
 
 ```
 
-### prism
+## PRISM
 
 -   [HMS: Hydrologic Micro Services \| United States Environmental Protection Agency \| US EPA](https://qed.epa.gov/hms/meteorology/humidity/algorithms/)
 
@@ -434,37 +436,94 @@ Temporal data availability:
 
 > Daily data are considered "early" for the current month. The previous six months are provisional data. After six months data are considered stable. Thus early data only exist for daily data, while there can be monthly (and presumably yearly) provisional data. -- `?prism::prism_archive_clean`
 
+### Example `tbeptools::read_importprism()`
+
+- `@example` from [`tbeptools::read_importprism()`](https://github.com/tbep-tech/tbeptools/blob/climate-change-indicators/R/read_importprism.R)
+
 ```{r}
-#| label: get_prism
+#| label: example_read_importprism
 #| messages: false
 #| warning: false
 
-# librarian::shelf(glue, here, leaflet, lubridate, 
-# # mapview, stars, 
-# prism, sf, stringr, tbep-tech/tbeptools, terra)
+# devtools::install_local("../tbeptools", force = T)
+# devtools::load_all("../tbeptools")
 
-# renv register libraries
-library(glue)
-library(here)
-library(leaflet)
-library(lubridate)
-# library(mapview)
-library(prism)
-# library(stars)
-library(sf)
-library(stringr)
-library(tbeptools)
-library(terra)
+# setup output directory and table
+dir_tif   <- here::here("../tbeptools/inst/prism")
+zonal_csv <- file.path(dir_tif, "_zones.csv")
 
-dir_prism <- here("tmp/prism")
-dir.create(dir_prism, showWarnings = F)
-prism_set_dl_dir(dir_prism)
+# run function for Tampa Bay watersheds for first 3 days and 4 variables
+d <- read_importprism(
+  vars      = c("tmin", "tmax", "tdmean", "ppt"),
+  date_beg  = as.Date("1981-01-01"),
+  date_end  = as.Date("1981-01-03"),
+  dir_tif   = dir_tif,
+  sf_zones  = tbsegshed,
+  fld_zones = "bay_segment",
+  zonal_csv = zonal_csv)
+
+# plot first of output rasters
+tifs <- list.files(dir_tif, pattern = ".tif$", full.names = T)
+basename(tifs)
+r <- terra::rast(tifs[1])
+names(r) # {data observed}_{variable}_v{version}_{date updated}
+terra::plet(
+  r[[3]],
+  main  = names(r)[3],
+  col   = "Spectral",
+  tiles = "CartoDB.DarkMatter")
+
+# show summary by zone
+d
 ```
 
--   https://prism.nacse.org/downloads/
-    -   https://prism.nacse.org/documents/PRISM_downloads_web_service.pdf
-        -   http://services.nacse.org/prism/data/public/4km/tmin/20090405
+### Operationalize
 
+```{r}
+#| label: operationalize_read_importprism
+#| eval: false
+
+librarian::shelf(
+  dplyr, here, sf, tbep-tech/tbeptools)
+
+# outputs
+dir_prism <- here("data/prism")
+prism_csv <- here("data/prism.csv")
+  
+# Tampa Bay watershed zones, including whole bay ("TB")
+tb_zones <- tbsegshed |>
+  bind_rows(
+    tbshed |>
+      mutate(bay_segment = "TB") |>
+      select(bay_segment, geometry))
+
+# bounding box with 0.2º margin around watershed, rounded to .1
+bb <- tbshed |> 
+  st_buffer(0.2) |> 
+  st_bbox() |> 
+  round(1)
+#     c(xmin = -82.9, ymin = 27.4, xmax = -81.9, ymax = 28.4)
+# after running terra::trim() on raster:
+bb <- c(xmin = -82.9, ymin = 27.2, xmax = -81.7, ymax = 28.6)
+
+d <- read_importprism(
+  vars      = c("tmin", "tmax", "tdmean", "ppt"),
+  date_beg  = as.Date("1981-01-01"),
+  date_end  = Sys.Date(),
+  bbox      = bb,
+  dir_tif   = dir_prism,
+  sf_zones  = tb_zones,
+  fld_zones = "bay_segment",
+  zonal_csv = prism_csv,
+  verbose   = T)
+
+# show summary by zone
+d
+```
+
+TODO: Github Action on daily cron to run `read_importprism()` for all days and variables
+
+```{r}
 # Get monthly (every month) and annual 30-year normals for precipitation
 
 # get_prism_normals(
@@ -479,7 +538,6 @@ prism_set_dl_dir(dir_prism)
 
 # keepZip = FALSE)
 
-```{r}
 var    <- "tmax"
 period <- "daily"
 date   <- today() - days(1) # yesterday
@@ -1296,7 +1354,9 @@ Questions:
     -   news summary: [A new way to quantify climate change impacts: “Outdoor days” \| MIT News \| Massachusetts Institute of Technology](https://news.mit.edu/2024/new-way-quantify-climate-change-impacts-outdoor-days-0322)
     -   Shiny app: [California Outdoor Days \| Eltahir Research Group](https://eltahir.mit.edu/california-outdoor-days/)
 
-## Sea Level Rise
+## Sea
+
+### Sea Level
 
 Sea level rise occurs from principally two sources: 1) thermal expansion; and 2) freshwater inputs from glacial melting. Data for these trends can be obtained from NOAA's [Sea Level Trends](https://tidesandcurrents.noaa.gov/sltrends/sltrends.html) (@fig-slr-noaa)
 
@@ -1306,7 +1366,7 @@ Types of data:
     -   Level-3 products distributed through NOAA CoastWatch (Sea Level Anomaly and along-track altimetry)
 2.  Projected (future). modeled
 
-### Gauges
+#### Gauges
 
 ![Screenshot of NOAA's [Sea Level Trends](https://tidesandcurrents.noaa.gov/sltrends/sltrends.html) zoomed into the Tampa Bay.](figures/slr_tidesandcurrents.noaa.gov-sltrends.png){#fig-slr-noaa}
 
@@ -1329,128 +1389,12 @@ https://tidesandcurrents.noaa.gov/sltrends/sltrends_station.shtml?id=8726724 htt
 - [FAQ for Sea Level Trends | NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/sltrends/faq.html#:~:text=Relative%20Sea%20Level%20Trends%20reflect%20changes,stations%2C%20called%20monthly%20mean%20sea%20level.)
   > **Relative Sea Level Trends** reflect changes in local sea level over time and are typically the most critical sea level trend for many coastal applications, including coastal mapping, marine boundary delineation, coastal zone management, coastal engineering, sustainable habitat restoration design, and the general public enjoying their favorite beach. This website focuses on relative sea level trends, computed from monthly averages of hourly water levels observed at specific tide stations, called **monthly mean sea level**.
 
-- [Tidal Datums | NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/datum_options.html)
--  Water Level Monthly Mean Data
--  Date Time	Date and time of the data
--  MHHW	Mean Higher-High Water
--  MHW	Mean High Water
--  DTL	Mean Diurnal Tide Level
--  MTL	Mean Tide Level
--  MSL	Mean Sea Level
--  MLW	Mean Low Water
--  MLLW	Mean Lower-Low Water
--  GT	Great Diurnal Range
--  MN	Mean Range of Tide
--  DHQ	Mean Diurnal High Water Inequality
--  DLQ	Mean Diurnal Low Water Inequality
--  HWI	Greenwich High Water Interval (in Hours)
--  LWI	Greenwich Low Water Interval (in Hours)
--  highest	Highest Tide
--  lowest	Lowest Tide
--  inferred	A flag that when set to 1 indicates that the water level value has been inferred
+See `tbeptools` additions:
 
+- [sealevelstations.R](https://github.com/tbep-tech/tbeptools/blob/climate-change-indicators/R/sealevelstations.R)
+- [read_importsealevels.R](https://github.com/tbep-tech/tbeptools/blob/climate-change-indicators/R/read_importsealevels.R)
+- [sealevels.Rmd](https://github.com/tbep-tech/tbeptools/blob/climate-change-indicators/vignettes/sealevels.Rmd)
 
-```{r}
-
-
-library(glue)
-
-station_id
-slr_csv <- "https://tidesandcurrents.noaa.gov/sltrends/data/{station_id}_meantrend.csv"
-slr_csv <- "https://tidesandcurrents.noaa.gov/sltrends/data/8726724_meantrend.csv"
-
-rm(d)
-d <- suppressWarnings(
-  request("https://tidesandcurrents.noaa.gov") |> 
-    req_url_path_append(
-      "sltrends", "data", 
-      glue("{station_id}_meantrend.csv")) |> 
-    req_perform() |> 
-    resp_body_string() |> 
-    read_csv(
-      skip           = 5, 
-      name_repair    = "unique_quiet",
-      show_col_types = F) ) 
-# names(d) |> paste(collapse = ", ")
-# Year, Month, Monthly_MSL, Linear_Trend, High_Conf., Low_Conf.
-
-problems(d)
-
-```
-
-https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/id.extension 
-https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290.json https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/id/resource.extension https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/8726724/datums.json "units": "feet", "datums": "name": "MSL", "description": "Mean Sea Level", "value": 3.2 "min": -0.84, "mindate": "19770119", "mintime": "08:06", "max": 8.491, "maxdate": "19930313", "maxtime": "04:48",
-
-https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/ports.extension https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/ports.json
-
-```{r}
-librarian::shelf(
-  dplyr, httr2, purrr, readr, tibble)
-# # register with renv
-# library(dplyr)
-# library(httr2)
-# library(readr)
-# # library(rnoaa)
-# library(tibble)
-
-d_csv <- here::here("data/slr/monthly_sea_levels.csv")
-
-d_stations <- tribble(
-  ~station_id, ~station_name,
-  8726724    , "Clearwater Beach",
-  8726674    , "East Bay",
-  8726384    , "Port Manatee",
-  8726520    , "St. Petersburg")
-
-get_station_data <- function(station_id){
-  httr2::request("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter") |> 
-    httr2::req_url_query(
-      station     = station_id,
-      begin_date  = 19010101,
-      end_date    = lubridate::today()  |> format("%Y%m%d") |> as.integer(), 
-      product     = "monthly_mean", # maxdur = 3653 days (10 yrs)
-      datum       = "stnd",
-      time_zone   = "lst",    # local time
-      units       = "metric", # meters
-      format      = "csv") |> 
-    httr2::req_perform() |> 
-    httr2::resp_body_string() |>
-    readr::read_csv(
-      name_repair    = "unique_quiet",
-      show_col_types = F)
-}
-
-d <- d_stations |> 
-  dplyr::mutate(
-    data = purrr::map(station_id, get_station_data)) |> 
-  tidyr::unnest(data)
-
-write_csv(d, d_csv)
-
-# d
-# # A tibble: 1,868 × 20
-#    station_id station_name      Year Month Highest  MHHW   MHW   MSL   MTL   MLW
-#         <dbl> <chr>            <dbl> <dbl>   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
-#  1    8726724 Clearwater Beach  1973     5    1.55  1.38  1.26 0.96  0.96  0.658
-#  2    8726724 Clearwater Beach  1973     6    1.61  1.38  1.25 0.951 0.954 0.655
-#  3    8726724 Clearwater Beach  1973     7    1.58  1.38  1.25 0.951 0.942 0.631
-#  4    8726724 Clearwater Beach  1973     8    1.57  1.40  1.28 0.981 0.972 0.668
-#  5    8726724 Clearwater Beach  1973     9    1.54  1.43  1.33 1.04  1.03  0.732
-#  6    8726724 Clearwater Beach  1973    10    1.66  1.38  1.29 1.02  1.02  0.747
-#  7    8726724 Clearwater Beach  1973    11    1.64  1.40  1.29 1.01  1.02  0.753
-#  8    8726724 Clearwater Beach  1973    12    1.53  1.28  1.16 0.896 0.893 0.622
-#  9    8726724 Clearwater Beach  1974     1    1.53  1.30  1.16 0.872 0.866 0.573
-# 10    8726724 Clearwater Beach  1974     2    1.61  1.27  1.15 0.869 0.863 0.579
-# # ℹ 1,858 more rows
-# # ℹ 10 more variables: MLLW <dbl>, DTL <dbl>, GT <dbl>, MN <dbl>, DHQ <dbl>,
-# #   DLQ <dbl>, HWI <dbl>, LWI <dbl>, Lowest <dbl>, Inferred <dbl>
-# # ℹ Use `print(n = ...)` to see more rows
-# names(d) |> paste(collapse=", ")
-# station_id, station_name, Year, Month, Highest, MHHW, MHW, MSL, MTL, MLW, MLLW, DTL, GT, MN, DHQ, DLQ, HWI, LWI, Lowest, Inferred
-# 
-# https://tidesandcurrents.noaa.gov/axis/webservices/waterlevelverifiedmonthly/response.jsp?stationId=8726724&beginDate=20220201&endDate=20240514&datum=MSL&unit=0&timeZone=0&format=html&Submit=Submit
-
-```
 
 -   [Sea Level Trends - NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/sltrends/sltrends.html)
 
@@ -1476,6 +1420,294 @@ write_csv(d, d_csv)
 
 -   [Inundation Dashboard - NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/inundationdb/)
 
+### Surface Temperature
+
+-   coral reefs: ecosystem health, ecotourism
+
+-   fisheries
+
+-   energy for hurricanes
+
+-   background: [NOAA Coral Reef Watch Tutorial](https://coralreefwatch.noaa.gov/product/5km/tutorial/crw05a_sst_product.php)
+    - [ERDDAP - Sea Surface Temperature, NOAA Coral Reef Watch Daily Global 5km Satellite SST (CoralTemp), 1985-present, Daily - Data Access Form](https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstDaily.html)
+
+Output is stored in a single raster file containing about a little over 13K layers, which seems to read and render reasonably fast (whereas for the more numerous PRISM layers, it was way too slow).
+
+```{r}
+librarian::shelf(
+  sf, tbeptools, mapview)
+
+tbshed_buf <- tbshed |> 
+  st_buffer(10000) |> # buffer by 10 km
+  st_bbox() |> 
+  st_as_sfc() |> 
+  st_as_sf()
+  
+# st_bbox(tbshed_buf) |> round(1)
+#  xmin  ymin  xmax  ymax 
+# -83.0  27.3 -81.8  28.5
+# after clipping to non-NA raster values
+bbox = c(xmin = -83.0, ymin = 27.2, xmax = -82.3, ymax= 28.5)
+sst_bbox <- bbox |>
+  sf::st_bbox() |>
+  sf::st_as_sfc() |>
+  sf::st_as_sf(crs = "+proj=longlat +datum=WGS84 +no_defs")
+
+mapView(tbsegshed, col.regions="gray") + 
+  mapView(tbshed_buf, col.regions = "blue") + 
+  mapView(sst_bbox, col.regions = "red")
+```
+
+```{r}
+#| label: get-sst
+#| eval: false
+
+librarian::shelf(
+  marinebon/extractr,
+  here)
+
+ed_extract(
+  ed        = ed_info("https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstDaily.html"),
+  var       = "analysed_sst",
+  bbox      = c(xmin = -83.0, ymin = 27.2, xmax = -82.3, ymax= 28.5),
+  aoi       = tbeptools::tbsegshed,
+  zonal_csv = here("data/sst/tbep_sst.csv"),
+  rast_tif  = here("data/sst/tbep_sst.tif"),
+  mask_tif = F)
+```
+
+
+```{r}
+librarian::shelf(
+  ggplot2, here, highcharter, lubridate, plotly, readr)
+
+# data("mpg", "diamonds", "economics_long", package = "ggplot2")
+# economics_long2 <- dplyr::filter(economics_long, variable %in% c("pop", "uempmed", "unemploy"))
+# hchart(economics_long2, "line", hcaes(x = date, y = value01, group = variable))
+
+sst_csv <- here("data/sst/tb_sst.csv")
+d_sst   <- read_csv(sst_csv, show_col_types = F)
+table(d_sst$bay_segment)
+#   BCB    HB   LTB    MR   MTB   OTB   TCB 
+# 13169 13169 13169 13169 13169 13169 13169 
+
+bay_segment <- "BCB"
+
+d <- d_sst |> 
+  filter(bay_segment == !!bay_segment) |> 
+  mutate(
+    year  = year(time),
+    # yday  = yday(time),
+    date  = sprintf(
+      "%d-%02d-%02d", 
+      year(today()), month(time), day(time) ) |> 
+      as.POSIXct(),
+    color = case_when(
+      year == year(today())     ~ "red",
+      year == year(today()) - 1 ~ "orange",
+      .default = "gray") ) |> 
+  # select(year, yday, date, color, val) |> 
+  # arrange(year, yday, date, val)
+  select(time, year, date, color, val) |> 
+  arrange(year, date, val)
+# table(d$yday) |> range()
+
+yrs    <- as.character(unique(d$year))
+colors <- setNames(rep("darkgray", length(yrs)), yrs)
+colors[as.character(year(today()))]     <- "red"
+colors[as.character(year(today()) - 1)] <- "orange"
+
+librarian::shelf(
+  slider, scales)
+
+d <- d |>
+  group_by(year) |> 
+  mutate(
+    val_sl = slider::slide_mean(
+      val, before = 3L, after = 3L, step = 1L, 
+      complete = F, na_rm = T),
+    txt_date = as.Date(time),
+    txt_val  = round(val_sl, 2) ) |> 
+  select(-time) |> 
+  ungroup()
+
+# TODO: darkly theme w/ bslib
+g <- ggplot(
+  d,
+  aes(
+    x     = date, 
+    y     = val_sl,
+    group = year,
+    color = factor(year),
+    date  = txt_date,
+    value = txt_val)) +  # frame = yday
+  geom_line(
+    # aes(text  = text),
+    alpha = 0.6) + 
+  scale_colour_manual(
+    values = colors) + 
+  theme(legend.position = "none") +
+  scale_x_datetime(
+    labels = date_format("%b %d")) + 
+  labs(
+    x = "Day of year",
+    y = "Temperature ºC")
+g
+# x, y, alpha, color, group, linetype, size
+
+# add color theming
+
+# https://rstudio.github.io/thematic/articles/auto.html
+
+ggplotly(g, tooltip=c("date","value"))
+
+# https://plotly-r.com/scatter-traces 3
+# https://plotly-r.com/client-side-linking 16
+
+
+# https://stackoverflow.com/questions/76435688/how-to-autoplay-a-plotly-chart-in-shiny
+d |> 
+  plot_ly(
+    x     = ~date,
+    y     = ~val,
+    frame = ~yday,
+    # group = ~year,
+    # color = ~color,
+    type  = 'scatter', 
+    mode  = 'lines',
+    # marker = list(size = 20),
+    showlegend = F,
+    transforms = list(
+    list(
+      type = 'groupby',
+      groups = d$year,
+      styles = list(
+        list(target = 2024, value = list(line =list(color = 'red'))),
+        list(target = 2023, value = list(line =list(color = 'orange'))),
+        list(target = 2022, value = list(line =list(color = 'darkgray'))) ) ) ) )
+    
+  
+  animation_button(visible = T) |> 
+  onRender("
+    function(el,x) {
+      Plotly.animate(el);
+    }")
+
+library(plotly)
+library(htmlwidgets)
+
+df <- data.frame(
+  x = c(1,2,1), 
+  y = c(1,2,1), 
+  f = c(1,2,3)
+)
+df %>%
+  plot_ly(
+    x = ~x,
+    y = ~y,
+    frame = ~f,
+    type = 'scatter',
+    mode = 'markers',
+    marker = list(size = 20),
+    showlegend = FALSE
+  ) %>% 
+  animation_button(visible = TRUE) %>%
+  onRender("
+        function(el,x) {
+          Plotly.animate(el);
+        }")
+
+
+# https://stackoverflow.com/questions/61152879/change-the-frame-label-in-plotly-animation
+DF <- data.frame(
+  year = rep(seq(1980L, 2020L), each = 12), 
+  month = rep(1:12, 41), 
+  month_char = rep(factor(month.abb), 41),
+  avg_depth = runif(492) )
+# with(DF, paste0(sprintf("%02d", month), " - ", month_char) )
+fig <- DF |> 
+  plot_ly(
+    x = ~year, 
+    y = ~avg_depth,
+    frame = ~paste0(sprintf("%02d", month), " - ", month_char),
+    type = 'bar') |> 
+  animation_slider(
+    currentvalue = list(prefix = "Month: ") )
+
+fig
+
+# https://stackoverflow.com/questions/50843134/r-plotly-animated-chart-only-showing-groups-with-data-in-initial-frame
+
+dates <- 2000:2010
+countries <- c("US", "GB", "JP")
+df <- merge(dates, countries, all=TRUE)
+names(df) <- c("Date", "Country")
+
+
+df$x <- rnorm(nrow(df))
+df$y <- rnorm(nrow(df))
+
+df[1:3, c("x", "y")] <- NA
+
+
+p <- ggplot(df, aes(x, y, color = Country)) +
+  geom_point(aes(frame = Date)) + theme_bw()
+
+ggplotly(p)
+
+# other
+
+g <- ggplot(
+  d,
+  aes(
+    x     = date, 
+    y     = val, 
+    color = factor(year))) +
+  geom_line(alpha = 0.6) + 
+  scale_colour_manual(
+    values = colors) + 
+  theme(legend.position = "none")
+g
+
+            
+p <- ggplotly(g) |> 
+  onRender("
+    function(el,x) {
+      Plotly.animate(el);
+    }")
+p
+
+d |> 
+  hchart(
+    "line", # "line"
+    hcaes(
+      x            = date, 
+      y            = val, 
+      group        = year,
+      segmentColor = clr),
+    showInLegend = F)
+
+mpgman2 <- count(mpg, manufacturer, year)
+hchart(
+  mpgman2, 
+  "bar",
+  hcaes(x = manufacturer, y = n, group = year),
+  color = c("#7CB5EC", "#F7A35C"),
+  name = c("Year 1999", "Year 2008"),
+  showInLegend = c(TRUE, FALSE) # only show the first one in the legend
+  )
+
+
+```
+
+### Acidification
+
+## Extreme Weather
+
+Or "Severe Weather"
+
+-   [SWDI vignette • rnoaa](https://docs.ropensci.org/rnoaa/articles/swdi_vignette.html)
+
 ### Hurricanes
 
 -   property damage
@@ -1487,37 +1719,9 @@ rnoaa::coops_search()
 
 ```
 
-### Sea Surface Temperature
+### Floods
 
--   coral reefs: ecosystem health, ecotourism
-
--   fisheries
-
--   energy for hurricanes
-
--   background: [NOAA Coral Reef Watch Tutorial](https://coralreefwatch.noaa.gov/product/5km/tutorial/crw05a_sst_product.php)
-    - [ERDDAP - Sea Surface Temperature, NOAA Coral Reef Watch Daily Global 5km Satellite SST (CoralTemp), 1985-present, Daily - Data Access Form](https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstDaily.html)
-
-
-```{r}
-
-librarian::shelf(
-  sf, tbeptools, mapview)
-
-tbshed_buf <- tbshed |> 
-  st_buffer(10000) |> 
-  st_bbox() |> 
-  st_as_sfc() |> 
-  st_as_sf()
-  
-# st_bbox(tbshed_buf) |> round(1)
-#  xmin  ymin  xmax  ymax 
-# -83.0  27.3 -81.8  28.5
-
-mapView(tbshed, col.regions="gray") + 
-  mapView(tbshed_buf)
-
-```
+## OLD
 
 ### Satellite
 
@@ -1546,6 +1750,3 @@ plet(r_slr_mer, tiles=providers$Esri.OceanBasemap) |>
     lng2 = b[["xmax"]], lat2 = b[["ymax"]])
 ```
 
-## Severe Weather
-
--   [SWDI vignette • rnoaa](https://docs.ropensci.org/rnoaa/articles/swdi_vignette.html)
