@@ -26,12 +26,22 @@ get_sst_r <- function(dates){  # dates = dates_then
 map_then_now <- function(
     r_then,
     r_now,
-    tiles = providers$CartoDB.DarkMatter,
+    dark_mode = T,
     lgnd_then,
     lgnd_now,
     var_lbl,
     palette     = "Spectral",
     palette_rev = TRUE){
+
+  tiles = ifelse(
+    dark_mode,
+    providers$CartoDB.DarkMatter,
+    providers$CartoDB.Positron)
+
+  color_tbsegshed = ifelse(
+    dark_mode,
+    "white",
+    "black")
 
   vals <- c(values(r_now, na.rm=T), values(r_then, na.rm=T))
   pal  <- colorNumeric(
@@ -70,11 +80,121 @@ map_then_now <- function(
       HTML(lgnd_now),
       position = "topright") |>
     addPolygons(
-      data = tbeptools::tbsegshed,
-      # label = ~long_name,
-      color="white", weight = 2, fillOpacity=0) |>
+      data = tbsegshed,
+      label = tbsegshed$long_name,
+      labelOptions = labelOptions(
+        interactive = T),
+      color = color_tbsegshed, weight = 2, fillOpacity=0) |>
+    fitBounds(b[1], b[2], b[3], b[4]) |>
     addLegend(
       pal    = pal,
       values = vals,
       title  = var_lbl)
+}
+
+
+plot_doy <- function(
+    df, # required columns: time, val
+    days_smooth      = 7,
+    color_thisyear   = "red",
+    color_lastyear   = "orange",
+    color_otheryears = "gray",
+    size_thisyear    = 1.5,
+    size_lastyear    = 1,
+    size_otheryears  = 0.5,
+    interactive      = TRUE){
+  # bay_segment = "BCB"
+  # df = d_sst_z
+
+  # check args ----
+  stopifnot(c("time","val") %in% names(df))
+
+  # days_smooth
+  stopifnot(is.numeric(days_smooth) & days_smooth >= 0 & days_smooth <= 365)
+  if (days_smooth == 0){
+    days_sm_before <- 0
+    days_sm_after  <- 0
+  } else {
+    h <- (days_smooth - 1)/2
+    days_sm_before <- ceiling(h) |> as.integer()
+    days_sm_after  <-   floor(h) |> as.integer()
+  }
+
+  yrs       <- range(year(df$time))
+  yr_last   <- yrs[2] - 1
+  yrs_other <- glue("{yrs[1]} to {yr_last}")
+  yr_cols <- setNames(
+    c(color_thisyear, color_lastyear, color_otheryears),
+    c(        yrs[2],        yr_last,        yrs_other))
+  yr_szs <- setNames(
+    c( size_thisyear,  size_lastyear, size_otheryears),
+    c(        yrs[2],        yr_last,       yrs_other))
+
+  md_lims <- sprintf(
+    "%d-%02d-%02d",
+    year(today()), c(1,12), c(1,31) ) |>
+    as.POSIXct()
+
+  d <- df |>
+    mutate(
+      year  = year(time),
+      doy   = sprintf(
+        "%d-%02d-%02d",
+        year(today()), month(time), day(time) ) |>
+        as.POSIXct(),
+      yr_cat = case_when(
+        year == yrs[2]  ~ yrs[2] |> as.character(),
+        year == yr_last ~ yr_last |> as.character(),
+        .default = yrs_other) |>
+        factor()) |>
+    select(time, year, doy, yr_cat, val) |>
+    arrange(year, doy, val) |>
+    group_by(year) |>
+    mutate(
+      val_sl = slider::slide_mean(
+        val,
+        before   = days_sm_before,
+        after    = days_sm_after,
+        step     = 1L,
+        complete = F,
+        na_rm    = T),
+      date  = as.Date(time),
+      value = round(val_sl, 2) ) |>
+    select(-time) |>
+    ungroup()
+
+  g <- ggplot(
+    d,
+    aes(
+      x     = doy,
+      y     = val_sl,
+      group = year,
+      color = yr_cat,
+      size  = yr_cat,
+      date  = date,
+      value = value)) +  # frame = yday
+    geom_line(
+      # aes(text  = text),
+      alpha = 0.6) +
+    scale_colour_manual(
+      name   = "Year",
+      values = yr_cols) +
+    scale_size_manual(
+      values = yr_szs, guide="none") +
+    # theme(legend.position = "") +
+    theme(
+      legend.position = c(0.5, 0.15)) +
+    scale_x_datetime(
+      labels = date_format("%b %d"),
+      limits = md_lims,
+      expand = c(0, 0)) +
+    labs(
+      x = "Day of year",
+      y = "Temperature (ºC)")
+
+  if (!interactive)
+    return(g)
+
+  ggplotly(g, tooltip=c("date","value")) |>
+    layout(legend = list(x = 0.5, y = 0.15))
 }

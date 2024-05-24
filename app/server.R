@@ -4,8 +4,8 @@ function(input, output, session) {
   observe(session$setCurrentTheme(
     if (isTRUE(input$dark_mode)) dark else light ))
 
-  # map_prism_temp ----
-  output$map_prism_temp <- renderLeaflet({
+  # map_temp ----
+  output$map_temp <- renderLeaflet({
 
     # DEBUG
     # input <- list(
@@ -46,18 +46,29 @@ function(input, output, session) {
     map_then_now(
       r_then,
       r_now,
-      tiles = ifelse(
-        isTRUE(input$dark_mode),
-        providers$CartoDB.DarkMatter,
-        providers$CartoDB.Positron),
+      dark_mode = isTRUE(input$dark_mode),
       lgnd_then,
       lgnd_now,
       var_lbl)
 
   })
 
-  # map_prism_rain ----
-  output$map_prism_ppt <- renderLeaflet({
+  # plot_temp ----
+  output$plot_temp <- renderPlotly({
+
+    d_prism_z |>
+      filter(
+        variable    == input$sel_t_var,
+        bay_segment == input$sld_t_seg) |>
+      mutate(
+        time = as.POSIXct(date)) |>
+      select(time, val = mean) |>
+      plot_doy(
+        days_smooth = input$sld_t_days_smooth)
+  })
+
+  # map_rain ----
+  output$map_rain <- renderLeaflet({
 
     # DEBUG
     # input <- list(
@@ -67,9 +78,9 @@ function(input, output, session) {
 
     var        = "ppt"
     var_lbl    = "Rain (mm)"
-    md         = sprintf("%02d-%02d", month(input$sld_p_md), day(input$sld_p_md))
-    yrs_now    = input$sld_p_yrs_now[1]:input$sld_p_yrs_now[2]
-    yrs_then   = input$sld_p_yrs_then[1]:input$sld_p_yrs_then[2]
+    md         = sprintf("%02d-%02d", month(input$sld_r_md), day(input$sld_r_md))
+    yrs_now    = input$sld_r_yrs_now[1]:input$sld_r_yrs_now[2]
+    yrs_then   = input$sld_r_yrs_then[1]:input$sld_r_yrs_then[2]
     dates_now  = as.Date(glue("{yrs_now}-{md}"))
     dates_then = as.Date(glue("{yrs_then}-{md}"))
 
@@ -88,26 +99,40 @@ function(input, output, session) {
 
     lgnd_now <- glue(
       "<b>Now</b><br>
-          {format(input$sld_p_md, '%b %d')},
+          {format(input$sld_r_md, '%b %d')},
           {paste(yrs_now_rng, collapse = ' to ')}")
     lgnd_then <- glue(
       "<b>Then</b><br>
-           {format(input$sld_p_md, '%b %d')},
+           {format(input$sld_r_md, '%b %d')},
            {paste(yrs_then_rng, collapse = ' to ')}")
 
     map_then_now(
       r_then,
       r_now,
-      tiles = ifelse(
-        isTRUE(input$dark_mode),
-        providers$CartoDB.DarkMatter,
-        providers$CartoDB.Positron),
+      dark_mode = isTRUE(input$dark_mode),
       lgnd_then,
       lgnd_now,
       var_lbl,
       palette     = "Blues",
       palette_rev = F)
 
+  })
+
+  # plot_rain ----
+  output$plot_rain <- renderPlotly({
+
+    d_prism_z |>
+      filter(
+        variable    == "ppt",
+        bay_segment == input$sld_r_seg) |>
+      mutate(
+        time = as.POSIXct(date)) |>
+      select(time, val = mean) |>
+      plot_doy(
+        days_smooth    = input$sld_r_days_smooth,
+        color_thisyear = "purple",
+        color_lastyear = "darkblue",
+      )
   })
 
   # map_sst ----
@@ -151,80 +176,20 @@ function(input, output, session) {
     map_then_now(
       r_then,
       r_now,
-      tiles = ifelse(
-        isTRUE(input$dark_mode),
-        providers$CartoDB.DarkMatter,
-        providers$CartoDB.Positron),
+      dark_mode = isTRUE(input$dark_mode),
       lgnd_then,
       lgnd_now,
       var_lbl)
-
   })
 
   # plot_sst ----
-  output$plot_sst <- plotly::renderPlotly({
+  output$plot_sst <- renderPlotly({
 
-    bay_segment <- "BCB"
-
-    d <- d_sst_z |>
-      filter(bay_segment == !!bay_segment) |>
-      mutate(
-        year  = year(time),
-        date  = sprintf(
-          "%d-%02d-%02d",
-          year(today()), month(time), day(time) ) |>
-          as.POSIXct(),
-        color = case_when(
-          year == year(today())     ~ "red",
-          year == year(today()) - 1 ~ "orange",
-          .default = "gray") ) |>
-      select(time, year, date, color, val) |>
-      arrange(year, date, val)
-
-    yrs    <- as.character(unique(d$year))
-    colors <- setNames(rep("darkgray", length(yrs)), yrs)
-    colors[as.character(year(today()))]     <- "red"
-    colors[as.character(year(today()) - 1)] <- "orange"
-
-    d <- d |>
-      group_by(year) |>
-      mutate(
-        val_sl = slider::slide_mean(
-          val, before = 3L, after = 3L, step = 1L,
-          complete = F, na_rm = T),
-        txt_date = as.Date(time),
-        txt_val  = round(val_sl, 2) ) |>
-      select(-time) |>
-      ungroup()
-
-    # TODO: darkly theme w/ bslib
-    g <- ggplot(
-      d,
-      aes(
-        x     = date,
-        y     = val_sl,
-        group = year,
-        color = factor(year),
-        date  = txt_date,
-        value = txt_val)) +  # frame = yday
-      geom_line(
-        # aes(text  = text),
-        alpha = 0.6) +
-      scale_colour_manual(
-        values = colors) +
-      theme(legend.position = "none") +
-      scale_x_datetime(
-        labels = date_format("%b %d")) +
-      labs(
-        x = "Day of year",
-        y = "Temperature ºC")
-    g
-    # x, y, alpha, color, group, linetype, size
-
-    # add color theming
-    # https://rstudio.github.io/thematic/articles/auto.html
-
-    ggplotly(g, tooltip=c("date","value"))
+    d_sst_z |>
+      filter(
+        bay_segment == input$sld_o_seg) |>
+      plot_doy(
+        days_smooth = input$sld_o_days_smooth)
   })
 
 }

@@ -6,26 +6,21 @@ editor_options:
 
 # Data
 
-Themes for indicators seeking relevance to:
-- Air & Sea
-- People & Ecosystems
+Themes for indicators seeking relevance to: - Air & Sea - People & Ecosystems
 
-Icons
-- Bootstrap
-  - [water](https://icons.getbootstrap.com/icons/water/)
-  - [thermometer](https://icons.getbootstrap.com/icons/thermometer/)
-    - [moisture](https://icons.getbootstrap.com/icons/moisture/)
-    - [thermometer-sun](https://icons.getbootstrap.com/icons/thermometer-sun/)
-  - [cloud-rain-heavy-fill](https://icons.getbootstrap.com/icons/cloud-rain-heavy-fill/)
-  - [tornado](https://icons.getbootstrap.com/icons/tornado/)
-- Fontawesome
-  - [water-rise](https://fontawesome.com/v5/icons/water-rise?f=classic&s=solid) PRO
+Icons - Bootstrap - [water](https://icons.getbootstrap.com/icons/water/) - [thermometer](https://icons.getbootstrap.com/icons/thermometer/) - [moisture](https://icons.getbootstrap.com/icons/moisture/) - [thermometer-sun](https://icons.getbootstrap.com/icons/thermometer-sun/) - [cloud-rain-heavy-fill](https://icons.getbootstrap.com/icons/cloud-rain-heavy-fill/) - [tornado](https://icons.getbootstrap.com/icons/tornado/) - Fontawesome - [water-rise](https://fontawesome.com/v5/icons/water-rise?f=classic&s=solid) PRO
 
 ## Task 1. Assessment of available data and coverage
 
 Data descriptive of the risks of climate change can be obtained from several sources. These may include weather or climatological data, long-term tidal gauge data, or in situ water measurements responsive to climate change. Weather and climatological data could be obtained from local weather stations with long-term data, e.g., Tampa International Airport, and could include measures of air temperature, precipitation, and/or storm intensity/frequency. Tidal gauge data are readily available from the NOAA PORTS data retrieval system. Lastly, in situ water measurements could include water temperature, changes in flow hydrology, salinity, and/or pH. Data used to evaluate potential risks related to ocean acidification should also be explored.
 
 The permanency and ease of access of each data source should be noted when making recommendations on indicators to operationalize. Further, indicators that communicate the risks associated with climate change are preferred, as opposed to those that simply indicate change. An example is the number of days in a year when temperature exceeds a critical threshold, as compared to temperature alone. An additional example is frequency of sunny day flooding events, as compared to tidal gauge measurements alone.
+
+```{r}
+# turn off all chunks by default
+knitr::opts_chunk$set(eval = FALSE)
+```
+
 
 ```{r}
 #| label: load-packages
@@ -438,7 +433,7 @@ Temporal data availability:
 
 ### Example `tbeptools::read_importprism()`
 
-- `@example` from [`tbeptools::read_importprism()`](https://github.com/tbep-tech/tbeptools/blob/climate-change-indicators/R/read_importprism.R)
+-   `@example` from [`tbeptools::read_importprism()`](https://github.com/tbep-tech/tbeptools/blob/climate-change-indicators/R/read_importprism.R)
 
 ```{r}
 #| label: example_read_importprism
@@ -1386,15 +1381,15 @@ https://tidesandcurrents.noaa.gov/sltrends/sltrends_station.shtml?id=8726724 htt
 
 [Inundation History - NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/inundationdb/inundation.html?id=8726724#flooddays)
 
-- [FAQ for Sea Level Trends | NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/sltrends/faq.html#:~:text=Relative%20Sea%20Level%20Trends%20reflect%20changes,stations%2C%20called%20monthly%20mean%20sea%20level.)
-  > **Relative Sea Level Trends** reflect changes in local sea level over time and are typically the most critical sea level trend for many coastal applications, including coastal mapping, marine boundary delineation, coastal zone management, coastal engineering, sustainable habitat restoration design, and the general public enjoying their favorite beach. This website focuses on relative sea level trends, computed from monthly averages of hourly water levels observed at specific tide stations, called **monthly mean sea level**.
+-   [FAQ for Sea Level Trends \| NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/sltrends/faq.html#:~:text=Relative%20Sea%20Level%20Trends%20reflect%20changes,stations%2C%20called%20monthly%20mean%20sea%20level.) \> **Relative Sea Level Trends** reflect changes in local sea level over time and are typically the most critical sea level trend for many coastal applications, including coastal mapping, marine boundary delineation, coastal zone management, coastal engineering, sustainable habitat restoration design, and the general public enjoying their favorite beach. This website focuses on relative sea level trends, computed from monthly averages of hourly water levels observed at specific tide stations, called **monthly mean sea level**.
 
 See `tbeptools` additions:
 
-- [sealevelstations.R](https://github.com/tbep-tech/tbeptools/blob/climate-change-indicators/R/sealevelstations.R)
-- [read_importsealevels.R](https://github.com/tbep-tech/tbeptools/blob/climate-change-indicators/R/read_importsealevels.R)
-- [sealevels.Rmd](https://github.com/tbep-tech/tbeptools/blob/climate-change-indicators/vignettes/sealevels.Rmd)
+-   [sealevelstations.R](https://github.com/tbep-tech/tbeptools/blob/climate-change-indicators/R/sealevelstations.R)
 
+-   [read_importsealevels.R](https://github.com/tbep-tech/tbeptools/blob/climate-change-indicators/R/read_importsealevels.R)
+
+-   [sealevels.Rmd](https://github.com/tbep-tech/tbeptools/blob/climate-change-indicators/vignettes/sealevels.Rmd)
 
 -   [Sea Level Trends - NOAA Tides & Currents](https://tidesandcurrents.noaa.gov/sltrends/sltrends.html)
 
@@ -1429,9 +1424,16 @@ See `tbeptools` additions:
 -   energy for hurricanes
 
 -   background: [NOAA Coral Reef Watch Tutorial](https://coralreefwatch.noaa.gov/product/5km/tutorial/crw05a_sst_product.php)
-    - [ERDDAP - Sea Surface Temperature, NOAA Coral Reef Watch Daily Global 5km Satellite SST (CoralTemp), 1985-present, Daily - Data Access Form](https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstDaily.html)
+
+    -   [ERDDAP - Sea Surface Temperature, NOAA Coral Reef Watch Daily Global 5km Satellite SST (CoralTemp), 1985-present, Daily - Data Access Form](https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstDaily.html)
 
 Output is stored in a single raster file containing about a little over 13K layers, which seems to read and render reasonably fast (whereas for the more numerous PRISM layers, it was way too slow).
+
+-   [Basic Detection and Visualisation of Events • heatwaveR](https://robwschlegel.github.io/heatwaveR/articles/detection_and_visualisation.html)
+
+    ![](https://robwschlegel.github.io/heatwaveR/articles/detection_and_visualisation_files/figure-html/fig-example1-1.png)
+
+    ![](https://robwschlegel.github.io/heatwaveR/articles/detection_and_visualisation_files/figure-html/fig-example5-1.png)
 
 ```{r}
 librarian::shelf(
@@ -1475,7 +1477,6 @@ ed_extract(
   rast_tif  = here("data/sst/tbep_sst.tif"),
   mask_tif = F)
 ```
-
 
 ```{r}
 librarian::shelf(
@@ -1749,4 +1750,3 @@ plet(r_slr_mer, tiles=providers$Esri.OceanBasemap) |>
     lng1 = b[["xmin"]], lat1 = b[["ymin"]], 
     lng2 = b[["xmax"]], lat2 = b[["ymax"]])
 ```
-
