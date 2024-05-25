@@ -1,4 +1,5 @@
 # TODO:
+# - [ ] add sea level plot with linear fit and map for stations
 # - [ ] make sld_{t}_tmp 2-values and process
 # - [ ] handle tmean w/ reactive; sel_t_var implement in map_prism_temp w/ avg
 # - [ ] reuse time slider processing with a functions.R
@@ -8,10 +9,11 @@
 # - [ ] move gears to right with Settings label
 # - [ ] temp: heat index using dewpoint (`tdmean` -> humidity)
 # - [ ] + density histogram below map for selected now & then times
+# - [ ] migrate viz functions.R to tbeptools
 # - [ ] create static figures for reports (auto parameterize rendered)
+# - [ ] swiper maps: leaflet-proxy-map updates to layers so can zoom / pan without refresh
 # - [x] icons for Map | Plot
 # - [x] swiper maps: precipitation, ocean temperature
-# - [x] swiper maps: leaflet-proxy-map updates to layers so can zoom / pan without refresh
 # - [x] style ggplotly https://rstudio.github.io/thematic/#shiny
 #          https://rstudio.github.io/thematic/articles/auto.html
 
