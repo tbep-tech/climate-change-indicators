@@ -14,6 +14,7 @@ page_navbar(
       tagList(
         "Map ", bs_icon("map")),
       card(
+        full_screen = T,
         card_header(
           "Air Temperature - Map of Then vs Now",
 
@@ -71,6 +72,7 @@ page_navbar(
       tagList(
         "Plot ", bs_icon("graph-up-arrow")),
       card(
+        full_screen = T,
         card_header(
           "Air Temperature - Day of year for all years",
 
@@ -106,6 +108,7 @@ page_navbar(
           "Map ", bs_icon("map")),
 
         card(
+          full_screen = T,
           card_header(
             "Precipitation - Map of Then vs Now",
 
@@ -149,6 +152,7 @@ page_navbar(
         tagList(
           "Plot ", bs_icon("graph-up-arrow")),
         card(
+          full_screen = T,
           card_header(
             "Air Temperature - Day of year for all years",
 
@@ -175,7 +179,28 @@ page_navbar(
   # Sea Level ----
   nav_panel(
     title = tagList(
-      "Sea Level", bs_icon("water")) ),
+      "Sea Level", bs_icon("water")),
+
+      # * map ----
+        card(
+          full_screen = T,
+          card_header(
+            tagList(
+              "Map of sea level stations ", bs_icon("map") ) ),
+          # TODO: helpText("Click on a different station to see the data."),
+          leafletOutput("map_sl") ),
+
+      # * plot ----
+        card(
+          full_screen = T,
+          card_header(
+            tagList(
+              "Plot of sea levels ", bs_icon("graph-up-arrow") ) ),
+          selectInput(
+            "sel_l_stn",
+            "Sea level station",
+            sl_stations),
+          plotlyOutput("plot_sl") ) ),
 
   # Ocean Temperature ----
   nav_panel(
@@ -188,6 +213,7 @@ page_navbar(
         tagList(
           "Map ", bs_icon("map")),
         card(
+          full_screen = T,
           card_header(
             "Sea Surface Temperate - Map of Then vs Now",
 
@@ -232,6 +258,7 @@ page_navbar(
         tagList(
           "Plot ", bs_icon("graph-up-arrow")),
         card(
+          full_screen = T,
           card_header(
             "Sea Surface Temperature - Day of year for all years",
 

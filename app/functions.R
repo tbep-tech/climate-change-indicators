@@ -23,6 +23,103 @@ get_sst_r <- function(dates){  # dates = dates_then
     project(leaflet:::epsg3857)
 }
 
+map_sl <- function(
+    dark_mode = T){
+
+  tiles = ifelse(
+    dark_mode,
+    providers$CartoDB.DarkMatter,
+    providers$CartoDB.Positron)
+
+  color_tbsegshed = ifelse(
+    dark_mode,
+    "white",
+    "black")
+
+  leaflet() |>
+    addProviderTiles(
+      tiles,
+      group   = "basemap",
+      layerId = "basemap") |>
+    addPolygons(
+      data         = tbsegshed,
+      label        = tbsegshed$long_name,
+      labelOptions = labelOptions(
+        interactive = T),
+      color        = color_tbsegshed,
+      weight       = 2,
+      fillOpacity  = 0) |>
+    addMarkers(
+      data    = tbeptools::sealevelstations,
+      lng     = ~longitude,
+      lat     = ~latitude,
+      layerId = ~station_id,
+      group   = "sl_stations",
+      label   = ~glue(
+        "<b>{station_name}</b><br>
+        sea level station") |>
+        lapply(HTML),
+      popup   = ~glue(
+        "<b>{station_name}</b><br>
+        sea level station<br>
+        ID: {station_id}<br>
+        est.: {date_est}"),
+      options = markerOptions(
+
+      ))
+
+}
+
+plot_sl <- function(stn_id, interactive = T) {
+
+  d <- d_sl |>
+    filter(
+      station_id == !!stn_id,
+      !is.na(msl))
+
+  m             <- lm(msl~date, data = d)
+  rsq           <- summary(m)$r.squared
+  m_per_day     <- m$coefficients[["date"]]
+  cm_per_decade <- m_per_day * 100 * 365 * 10
+
+  txt_g <- sprintf(
+    "atop(
+      Sea~level~rise:~%0.2f~cm/decade,
+      (R^2:~%0.2f))", cm_per_decade, rsq)
+  txt_p <- sprintf(
+    "Sea level rise: %0.2f cm/decade\n
+    (R<sup>2</sup>: %0.2f)", cm_per_decade, rsq)
+
+  g <-  d |>
+    ggplot(aes(x = date, y = msl)) +
+    geom_point() +
+    geom_smooth(method = "lm", formula = "y ~ x") +
+    # TODO: settings slider for wiggles (0 = lm)
+    # geom_smooth(
+    #   method = lm, formula = y ~ splines::bs(x, 5)) +
+    labs(
+      x = "Date",
+      y = "Mean Sea Level (m)")
+
+  if (!interactive)
+    return(
+      g +
+        annotate(
+          "text",
+          x=min(d$date), y=max(d$msl), hjust=0, vjust=1,
+          label = txt_g, parse = T))
+
+  ggplotly(g) |>
+    add_annotations(
+      x = 0,
+      y = 1,
+      xref = "paper",
+      yref = "paper",
+      text = txt_p,
+      xanchor = "left",
+      showarrow = F)
+}
+
 map_then_now <- function(
     r_then,
     r_now,
@@ -80,11 +177,13 @@ map_then_now <- function(
       HTML(lgnd_now),
       position = "topright") |>
     addPolygons(
-      data = tbsegshed,
-      label = tbsegshed$long_name,
+      data         = tbsegshed,
+      label        = tbsegshed$long_name,
       labelOptions = labelOptions(
         interactive = T),
-      color = color_tbsegshed, weight = 2, fillOpacity=0) |>
+      color        = color_tbsegshed,
+      weight       = 2,
+      fillOpacity  = 0) |>
     fitBounds(b[1], b[2], b[3], b[4]) |>
     addLegend(
       pal    = pal,

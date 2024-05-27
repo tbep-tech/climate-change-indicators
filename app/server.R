@@ -135,6 +135,24 @@ function(input, output, session) {
       )
   })
 
+
+  # map_sl ----
+  output$map_sl <- renderLeaflet({
+    map_sl()
+  })
+
+  # plot_sl ----
+  output$plot_sl <- renderPlotly({
+    # input$map_sl$click
+    # TODO: update input$sel_l_stn based on map stn click
+    #       update map highlighted marker based on ∆ input$sel_l_stn
+
+    # input <- list(sel_l_stn = 8726724)
+
+    plot_sl(input$sel_l_stn)
+
+  })
+
   # map_sst ----
   output$map_sst <- renderLeaflet({
 
