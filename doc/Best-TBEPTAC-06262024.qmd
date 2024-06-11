@@ -1,0 +1,112 @@
+---
+title: "Developing Climate Change Indicators for Tampa Bay"
+author: 
+   - name: Dr. Ben Best, <ben@ecoquants.com>
+institute: "EcoQuants, LLC, <https://ecoquants.com/>"
+date: "06/26/2024"
+format:
+  revealjs:
+    logo: TBEP_logo.png
+    transition: slide
+    footer: "Tampa Bay Estuary Program, Technical Advisory Committee"
+    link-external-icon: true
+    theme: styles.scss
+    linkcolor: "#00806E"
+    link-external-newwindow: true
+    auto-stretch: false
+execute:
+  echo: true
+  message: false
+  warning: false
+---
+
+```{r}
+#| include: false
+library(knitr)
+```
+
+------------------------------------------------------------------------
+
+## CONTEXT: WE NEED FEEDBACK!
+
+![](tbepboard.png){fig-align="center"}
+
+------------------------------------------------------------------------
+
+## INDICATORS TO DATE: REPORT CARDS
+
+![](reportcard.png){fig-align="center"}
+
+## INDICATORS TO DATE: DASHBOARDS
+
+* Water Quality: <https://shiny.tbep.org/wq-dash>
+* Benthic: <https://shiny.tbep.org/benthic-dash>
+* Nekton: <https://shiny.tbep.org/nekton-dash>
+* Seagrass Transects: <https://shiny.tbep.org/seagrasstransect-dash>
+* Land Use Change: <https://shiny.tbep.org/landuse-change>
+* Tidal Creeks: <https://shiny.tbep.org/tidalcreek-dash>
+* Piney Point: <https://shiny.tbep.org/piney-point>
+
+------------------------------------------------------------------------
+
+## STATE OF THE BAY REPORT CARD
+
+:::: columns
+::: {.column width="50%"}
+
+* Working towards a synthesis bay report card, e.g., <https://www.cbf.org/about-the-bay/state-of-the-bay-report/>
+* Integration of multiple indicators for easy communication
+* Missing indicators...
+
+:::
+
+::: {.column width="50%"}
+![](complete.png){width=80%}
+:::
+
+::::
+
+------------------------------------------------------------------------
+
+## TRACKING CLIMATE CHANGE
+
+::: columns
+::: {.column width="60%"}
+-   Assess long-term effects of sea level rise on emergent tidal wetlands
+-   Monitor transition zones from shoreline to uplands at ten locations
+-   Repeat surveys every 3-5 years for next few decades
+-   Directly relatec to CCMP Action [CC-1](https://tbep-tech.github.io/ccmp/docs/communities/cc1.html)
+:::
+
+::: {.column width="40%"}
+![](sitemap.jpg)
+:::
+:::
+
+------------------------------------------------------------------------
+
+## MORE ROUTINE INDICATORS?
+
+- [CCMP Monitoring and Indicators Plan](https://drive.google.com/file/d/1H8_zpDT56m6fEGDlRNbRRoE3-tHYF7lH/view), gap for "analysis and synthesis of long-term regional climate characteristics"
+
+::: {.callout-note .my-callout title="Relevant questions:"}
+1. Are water levels inc, dec, or stable?
+1. Are water temperatures inc, dec, or stable?
+1. Is annual average rainfall inc, dec, or stable?
+1. Is the number of ‘extreme’ events inc, dec, or stable?
+1. Is evapotranspiration inc, dec, or stable?
+:::
+
+------------------------------------------------------------------------
+
+## APPROACH
+
+-   Open data, tbeptools, dashboard, routine updates...
+
+------------------------------------------------------------------------
+
+## QUESTIONS
+
+-   Have we captured appropriate climate change indicators? 
+-   Are the indicators displayed intuitively, are status/trends clear?
+-   Does this information assist with planning or management priorities/actions?
