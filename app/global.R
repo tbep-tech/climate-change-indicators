@@ -1,4 +1,6 @@
 # TODO:
+# - [ ] add landing page, with value_box() and possibly sparklines
+# - [ ] add avg (before 2 yrs ago) to plot_doy() colored blue
 # - [ ] make sld_{t}_tmp 2-values and process
 # - [ ] handle tmean w/ reactive; sel_t_var implement in map_prism_temp w/ avg
 # - [ ] reuse time slider processing with a functions.R
