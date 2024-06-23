@@ -1,0 +1,32 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "TBEP-CC",
+    "section": "",
+    "text": "Preface\nThis is a Quarto book.\nTo learn more about Quarto books visit https://quarto.org/docs/books.\n\n\nCode\n1 + 1\n\n\n[1] 2",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "intro.html",
+    "href": "intro.html",
+    "title": "1  Introduction",
+    "section": "",
+    "text": "The Tampa Bay Estuary Program compiles environmental data from multiple partners to report on the status and trends of key indicators of bay health (Monitoring and Indicators Plan). Indicators and reporting methods currently exist for several components of the CCMP, including water quality, benthic and sediment condition, fish communities, seagrasses, and tidal creeks. Open-source methods have been developed using the tbeptools R package (Beck, Schrandt, et al. 2021) that facilitates data synthesis and routine reporting for each of these indicators.\nAdditional indicators of bay health will complement the existing set of indicators. Key indicators currently missing from TBEP routine reporting products include those related to climate change.  The Tampa Bay Regional Planning Council has produced the Regional Resilience Action Plan (RRAP) to assist local governments and municipalities in planning resilience activities in response to climate change.  Fundamental to these activities is the identification of robust indicators of the local effects of climate change.  These may include data descriptive of sea-level rise, droughts, heat waves, or storm frequency/intensity.  The TBEP is supportive of these efforts and intends to identify several climate change indicators that can be operationalized for routine reporting, either through conventional summary graphics or more interactive web-based platforms.\n\nThis project will identify appropriate climate change indicators to support the TBEP and its partners in making informed planning decisions.  Although the primary goal of TBEP is the management of bay health, these indicators could also be used to support community resilience planning as described in the RRAP.  Appropriate data sources will be identified, with emphasis on those that are stable and planned to be reliable sources in the future.  Identifying indicators that represent relative risk of climate change impacts will be emphasized, as opposed to indicators that simply measure change.  All project activities will leverage open science principles as described in the TBEP Strategic Plan (Burke and Amaral 2020) and Data Management SOP (Beck, Raulerson, et al. 2021).\n\n\n\n\n\n\nBeck, Marcus W., G. E. Raulerson, M. C. Burke, J. Whalen, S. Scolaro, and E. T. Sherwood. 2021. “Tampa Bay Estuary Program: Data Management Standard Operating Procedures.” St. Petersburg, Florida.\n\n\nBeck, Marcus W., Meagan N. Schrandt, Michael R. Wessel, Edward T. Sherwood, Gary E. Raulerson, Adhokshaja Achar Budihal Prasad, and Benjamin D. Best. 2021. “Tbeptools: An R Package for Synthesizing Estuarine Data for Environmental Research.” Journal of Open Source Software 6 (65): 3485. https://doi.org/10.21105/joss.03485.\n\n\nBurke, M., and M. Amaral. 2020. “2021-2025 Strategic Plan.” St. Petersburg, Florida.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Introduction</span>"
+    ]
+  },
+  {
+    "objectID": "references.html",
+    "href": "references.html",
+    "title": "References",
+    "section": "",
+    "text": "Beck, Marcus W., G. E. Raulerson, M. C. Burke, J. Whalen, S. Scolaro,\nand E. T. Sherwood. 2021. “Tampa Bay Estuary Program: Data\nManagement Standard Operating Procedures.” St. Petersburg,\nFlorida.\n\n\nBeck, Marcus W., Meagan N. Schrandt, Michael R. Wessel, Edward T.\nSherwood, Gary E. Raulerson, Adhokshaja Achar Budihal Prasad, and\nBenjamin D. Best. 2021. “Tbeptools: An R Package for Synthesizing\nEstuarine Data for Environmental Research.” Journal of Open\nSource Software 6 (65): 3485. https://doi.org/10.21105/joss.03485.\n\n\nBurke, M., and M. Amaral. 2020. “2021-2025 Strategic Plan.”\nSt. Petersburg, Florida.",
+    "crumbs": [
+      "References"
+    ]
+  }
+]

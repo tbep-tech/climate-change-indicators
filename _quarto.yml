@@ -1,6 +1,6 @@
 project:
   type: book
-  output-dir: _book
+  output-dir: docs
   resources:
     - /.nojekyll
 
@@ -43,7 +43,7 @@ book:
   chapters:
     - index.qmd
     - intro.qmd
-    - data.qmd
+    # - data.qmd
     - references.qmd
 
 bibliography: references.bib
