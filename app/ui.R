@@ -2,6 +2,13 @@ thematic_shiny()
 page_navbar(
   title = "Tampa Bay Climate Change Indicators",
   theme = dark,
+  
+  nav_panel(
+    title = tagList(
+      "Overview", bs_icon("compass-fill")),
+    layout_column_wrap(
+      width = "250px",
+      !!!vbs ) ),
 
   # Air Temperature ----
   nav_panel(

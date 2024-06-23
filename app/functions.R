@@ -297,3 +297,118 @@ plot_doy <- function(
   ggplotly(g, tooltip=c("date","value")) |>
     layout(legend = list(x = 0.5, y = 0.15))
 }
+
+plot_violin <- function(
+    df,
+    interactive = TRUE){
+  # df = d_prism_z |> filter(
+  #   bay_segment == "TB") |>
+  #   select(date, variable, mean)
+  
+  df <- df |> 
+    mutate(
+      doy   = sprintf(
+        "%d-%02d-%02d",
+        year(today()), month(time), day(time) ) )
+  # df_then <- df |> 
+  #   mutate(
+  #     doy   = sprintf(
+  #       "%d-%02d-%02d",
+  #       year(today()), month(time), day(time) ) )
+  # 
+  #   filter(date)
+  # ggplot(, aes())
+  # 
+  
+  # check args ----
+  stopifnot(c("time","val") %in% names(df))
+  
+  # days_smooth
+  stopifnot(is.numeric(days_smooth) & days_smooth >= 0 & days_smooth <= 365)
+  if (days_smooth == 0){
+    days_sm_before <- 0
+    days_sm_after  <- 0
+  } else {
+    h <- (days_smooth - 1)/2
+    days_sm_before <- ceiling(h) |> as.integer()
+    days_sm_after  <-   floor(h) |> as.integer()
+  }
+  
+  yrs       <- range(year(df$time))
+  yr_last   <- yrs[2] - 1
+  yrs_other <- glue("{yrs[1]} to {yr_last}")
+  yr_cols <- setNames(
+    c(color_thisyear, color_lastyear, color_otheryears),
+    c(        yrs[2],        yr_last,        yrs_other))
+  yr_szs <- setNames(
+    c( size_thisyear,  size_lastyear, size_otheryears),
+    c(        yrs[2],        yr_last,       yrs_other))
+  
+  md_lims <- sprintf(
+    "%d-%02d-%02d",
+    year(today()), c(1,12), c(1,31) ) |>
+    as.POSIXct()
+  
+  d <- df |>
+    mutate(
+      year  = year(time),
+      doy   = sprintf(
+        "%d-%02d-%02d",
+        year(today()), month(time), day(time) ) |>
+        as.POSIXct(),
+      yr_cat = case_when(
+        year == yrs[2]  ~ yrs[2] |> as.character(),
+        year == yr_last ~ yr_last |> as.character(),
+        .default = yrs_other) |>
+        factor()) |>
+    select(time, year, doy, yr_cat, val) |>
+    arrange(year, doy, val) |>
+    group_by(year) |>
+    mutate(
+      val_sl = slider::slide_mean(
+        val,
+        before   = days_sm_before,
+        after    = days_sm_after,
+        step     = 1L,
+        complete = F,
+        na_rm    = T),
+      date  = as.Date(time),
+      value = round(val_sl, 2) ) |>
+    select(-time) |>
+    ungroup()
+  
+  g <- ggplot(
+    d,
+    aes(
+      x     = doy,
+      y     = val_sl,
+      group = year,
+      color = yr_cat,
+      size  = yr_cat,
+      date  = date,
+      value = value)) +  # frame = yday
+    geom_line(
+      # aes(text  = text),
+      alpha = 0.6) +
+    scale_colour_manual(
+      name   = "Year",
+      values = yr_cols) +
+    scale_size_manual(
+      values = yr_szs, guide="none") +
+    # theme(legend.position = "") +
+    theme(
+      legend.position = c(0.5, 0.15)) +
+    scale_x_datetime(
+      labels = date_format("%b %d"),
+      limits = md_lims,
+      expand = c(0, 0)) +
+    labs(
+      x = "Day of year",
+      y = "Temperature (ºC)")
+  
+  if (!interactive)
+    return(g)
+  
+  ggplotly(g, tooltip=c("date","value")) |>
+    layout(legend = list(x = 0.5, y = 0.15))
+}
