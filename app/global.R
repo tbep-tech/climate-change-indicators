@@ -86,11 +86,15 @@ b <- st_bbox(tbsegshed) |> as.numeric()
 
 # overview ----
 
-hist_layout <- showcase_left_center(
-  width                  = 0.5,
-  width_full_screen      = "1fr",
-  max_height             = "250px", # default: "100px"
-  max_height_full_screen = 0.77)
+vb <- function(...){
+  value_box(
+    showcase_layout = showcase_bottom(
+      height     = 0.5),
+    max_height      = "300px",
+    full_screen     = TRUE,
+    theme           = "primary",
+    ...)
+}
 
 # TODO: make reactive to settings for bay_segment, var and years/date
 d_temp <- d_prism_z |>

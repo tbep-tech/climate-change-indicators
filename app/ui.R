@@ -10,43 +10,23 @@ page_navbar(
     layout_column_wrap(
       width = "400px",
 
-
       # * Air Temperature ----
-      value_box(
-        title           = span(
-          "Air Temperature", bs_icon("thermometer-half")),
-        value           =
-          uiOutput("value_temp"),
-          p(uiOutput("caption_temp")),
-        showcase        = plotlyOutput("hist_temp"),
-        showcase_layout = hist_layout,
-        full_screen     = TRUE,
-        theme           = "success" ),
+      vb(
+        title    = span("Air Temperature", bs_icon("thermometer-half")),
+        value    = uiOutput("value_temp"), p(uiOutput("caption_temp")),
+        showcase = plotlyOutput("hist_temp")),
 
       # * Rain ----
-      value_box(
-        title           = span(
-          "Rain", bs_icon("cloud-rain-fill")),
-        value           =
-          uiOutput("value_rain"),
-          p(uiOutput("caption_rain")),
-        showcase        = plotlyOutput("hist_rain"),
-        showcase_layout = hist_layout,
-        full_screen     = TRUE,
-        theme           = "success" ),
+      vb(
+        title    = span("Rain", bs_icon("cloud-rain-fill")),
+        value    = uiOutput("value_rain"), p(uiOutput("caption_rain")),
+        showcase = plotlyOutput("hist_rain")),
 
       # * Ocean Temperature ----
-      value_box(
-        title           = span(
-          "Ocean Temperature", bs_icon("thermometer-low")),
-        value           =
-          uiOutput("value_sst"),
-          p(uiOutput("caption_sst")),
-        showcase        = plotlyOutput("hist_sst"),
-        showcase_layout = hist_layout,
-        full_screen     = TRUE,
-        theme           = "success" )
-
+      vb(
+        title    = span("Ocean Temperature", bs_icon("thermometer-low")),
+        value    = uiOutput("value_sst"), p(uiOutput("caption_sst")),
+        showcase = plotlyOutput("hist_sst"))
     )),
 
   # Air Temperature [t] ----
