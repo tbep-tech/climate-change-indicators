@@ -6,9 +6,22 @@ editor_options:
 
 # Data
 
-Themes for indicators seeking relevance to: - Air & Sea - People & Ecosystems
+Themes for indicators seeking relevance to:
 
-Icons - Bootstrap - [water](https://icons.getbootstrap.com/icons/water/) - [thermometer](https://icons.getbootstrap.com/icons/thermometer/) - [moisture](https://icons.getbootstrap.com/icons/moisture/) - [thermometer-sun](https://icons.getbootstrap.com/icons/thermometer-sun/) - [cloud-rain-heavy-fill](https://icons.getbootstrap.com/icons/cloud-rain-heavy-fill/) - [tornado](https://icons.getbootstrap.com/icons/tornado/) - Fontawesome - [water-rise](https://fontawesome.com/v5/icons/water-rise?f=classic&s=solid) PRO
+-   Air & Sea
+-   People & Ecosystems
+
+Icons
+
+-   Bootstrap
+    -   [water](https://icons.getbootstrap.com/icons/water/)
+    -   [thermometer](https://icons.getbootstrap.com/icons/thermometer/)
+    -   [moisture](https://icons.getbootstrap.com/icons/moisture/)
+    -   [thermometer-sun](https://icons.getbootstrap.com/icons/thermometer-sun/)
+    -   [cloud-rain-heavy-fill](https://icons.getbootstrap.com/icons/cloud-rain-heavy-fill/)
+    -   [tornado](https://icons.getbootstrap.com/icons/tornado/)
+-   Fontawesome
+    -   [water-rise](https://fontawesome.com/v5/icons/water-rise?f=classic&s=solid) PRO
 
 ## Task 1. Assessment of available data and coverage
 
@@ -20,7 +33,6 @@ The permanency and ease of access of each data source should be noted when makin
 # turn off all chunks by default
 knitr::opts_chunk$set(eval = FALSE)
 ```
-
 
 ```{r}
 #| label: load-packages
