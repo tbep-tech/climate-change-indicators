@@ -298,117 +298,114 @@ plot_doy <- function(
     layout(legend = list(x = 0.5, y = 0.15))
 }
 
-plot_violin <- function(
-    df,
+plot_hist <- function(
+    df,                                           # requires columns: date, value
+    month_day    = format(max(df$date), "%m-%d"), # in "%m-%d" format as in "10-31" for Oct 31
+    years_now    = lubridate::year(max(df$date)),
+    years_then   = lubridate::year(min(df$date)):(lubridate::year(min(df$date)) + 20),
+    color_then   = "white",
+    color_now    = "red",
+    caption_list = list(
+      value_glue   = "{sign_symbol} {round(abs(avg_diff), 2)} {units}",
+      caption_glue = "
+      The air temperature as of {dates_now} is {round(abs(avg_diff),2)} {units} {sign_text} than the
+      previously recorded average during the years {years_then_text}.",
+      positive = "warmer",
+      negative = "colder",
+      units    = "ºC"),
     interactive = TRUE){
-  # df = d_prism_z |> filter(
-  #   bay_segment == "TB") |>
-  #   select(date, variable, mean)
-  
-  df <- df |> 
+
+  # DEBUG
+  # df = d_prism_z |>
+  #   filter(
+  #     bay_segment           == "TB",
+  #     variable              == "tdmean") |>
+  #   rename(value = mean)
+
+  stopifnot(c("date","value") %in% names(df))
+
+  d = df |>
+    filter(
+      format(date, "%m-%d") == month_day) |>
+    select(date, value) |>
     mutate(
-      doy   = sprintf(
-        "%d-%02d-%02d",
-        year(today()), month(time), day(time) ) )
-  # df_then <- df |> 
-  #   mutate(
-  #     doy   = sprintf(
-  #       "%d-%02d-%02d",
-  #       year(today()), month(time), day(time) ) )
-  # 
-  #   filter(date)
-  # ggplot(, aes())
-  # 
-  
-  # check args ----
-  stopifnot(c("time","val") %in% names(df))
-  
-  # days_smooth
-  stopifnot(is.numeric(days_smooth) & days_smooth >= 0 & days_smooth <= 365)
-  if (days_smooth == 0){
-    days_sm_before <- 0
-    days_sm_after  <- 0
+      yr       = year(date),
+      interval = case_when(
+        yr %in% years_now  ~ "Now",
+        yr %in% years_then ~ "Then")) |>
+    filter(
+      !is.na(interval))
+
+    g <- d |>
+      ggplot(aes(x = value, fill = interval, color = interval)) +
+      scale_fill_manual(
+        values = c(
+          Then = color_then,
+          Now  = color_now)) +
+      scale_color_manual(
+        values = c(
+          Then = color_then,
+          Now  = color_now)) +
+      geom_density(
+        alpha = 0.7, color = NA) +
+      stat_summary(
+        aes(xintercept = after_stat(x), y = 0),
+        fun = mean, geom = "vline", orientation = "y") +
+      # theme_minimal() +
+      theme(
+        axis.text=element_text(size=16),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.title                = element_blank(),
+        legend.position.inside      = c(0.1, 0.9),
+        legend.justification.inside = c(0, 1)) +
+      guides(
+        fill  = guide_legend(position = "inside")) +
+      scale_x_continuous(
+        breaks = function(x) pretty(x, min.n = 3, n=5, high.u.bias = 7),
+        expand = c(0, 0)) +
+      scale_y_continuous(expand = c(0, 0))
+
+  if (!interactive){
+    o <- g
   } else {
-    h <- (days_smooth - 1)/2
-    days_sm_before <- ceiling(h) |> as.integer()
-    days_sm_after  <-   floor(h) |> as.integer()
+    g <- g +
+      theme(legend.position = "none")
+    o <- ggplotly(g)
   }
-  
-  yrs       <- range(year(df$time))
-  yr_last   <- yrs[2] - 1
-  yrs_other <- glue("{yrs[1]} to {yr_last}")
-  yr_cols <- setNames(
-    c(color_thisyear, color_lastyear, color_otheryears),
-    c(        yrs[2],        yr_last,        yrs_other))
-  yr_szs <- setNames(
-    c( size_thisyear,  size_lastyear, size_otheryears),
-    c(        yrs[2],        yr_last,       yrs_other))
-  
-  md_lims <- sprintf(
-    "%d-%02d-%02d",
-    year(today()), c(1,12), c(1,31) ) |>
-    as.POSIXct()
-  
-  d <- df |>
-    mutate(
-      year  = year(time),
-      doy   = sprintf(
-        "%d-%02d-%02d",
-        year(today()), month(time), day(time) ) |>
-        as.POSIXct(),
-      yr_cat = case_when(
-        year == yrs[2]  ~ yrs[2] |> as.character(),
-        year == yr_last ~ yr_last |> as.character(),
-        .default = yrs_other) |>
-        factor()) |>
-    select(time, year, doy, yr_cat, val) |>
-    arrange(year, doy, val) |>
-    group_by(year) |>
-    mutate(
-      val_sl = slider::slide_mean(
-        val,
-        before   = days_sm_before,
-        after    = days_sm_after,
-        step     = 1L,
-        complete = F,
-        na_rm    = T),
-      date  = as.Date(time),
-      value = round(val_sl, 2) ) |>
-    select(-time) |>
-    ungroup()
-  
-  g <- ggplot(
-    d,
-    aes(
-      x     = doy,
-      y     = val_sl,
-      group = year,
-      color = yr_cat,
-      size  = yr_cat,
-      date  = date,
-      value = value)) +  # frame = yday
-    geom_line(
-      # aes(text  = text),
-      alpha = 0.6) +
-    scale_colour_manual(
-      name   = "Year",
-      values = yr_cols) +
-    scale_size_manual(
-      values = yr_szs, guide="none") +
-    # theme(legend.position = "") +
-    theme(
-      legend.position = c(0.5, 0.15)) +
-    scale_x_datetime(
-      labels = date_format("%b %d"),
-      limits = md_lims,
-      expand = c(0, 0)) +
-    labs(
-      x = "Day of year",
-      y = "Temperature (ºC)")
-  
-  if (!interactive)
-    return(g)
-  
-  ggplotly(g, tooltip=c("date","value")) |>
-    layout(legend = list(x = 0.5, y = 0.15))
+
+  # render caption ----
+  attach(caption_list)
+
+  if (length(years_now) == 1){
+    dates_now <- format(as.Date(glue("{years_now}-{month_day}")), "%b %d, %Y")
+  } else {
+    dates_now_1 <- format(as.Date(glue("{years_now[1]}-{month_day}")), "%b %d, %Y")
+    dates_now <- glue("{dates_now_1} to {years_now[length(years_now)]}")
+  }
+
+  avg_diff <- d |>
+    group_by(interval) |>
+    summarise(
+      avg = mean(value)) |>
+    pull(avg) |>
+    rev() |>
+    diff()
+  sign_symbol <- ifelse(avg_diff > 0, "+", "-")
+
+  value <- glue(value_glue)
+
+  sign_text <- ifelse(avg_diff > 0, positive, negative)
+  years_then_text <- glue("{years_then[1]} to {years_then[length(years_then)]}")
+  caption <- glue(caption_glue)
+  detach(caption_list)
+
+  attr(o, "value")   <- value
+  attr(o, "caption") <- caption
+  attr(o, "value_caption") <- tagList(
+    value, p(caption))
+
+  o
 }

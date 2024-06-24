@@ -85,66 +85,28 @@ sl_stations <- d_sl |>
 b <- st_bbox(tbsegshed) |> as.numeric()
 
 # overview ----
-sparkline <- plot_ly(economics) |> 
-  add_lines(
-    x = ~date, y = ~psavert,
-    color = I("white"), span = I(1),
-    fill = 'tozeroy', alpha = 0.2) |> 
-  layout(
-    xaxis = list(visible = F, showgrid = F, title = ""),
-    yaxis = list(visible = F, showgrid = F, title = ""),
-    hovermode = "x",
-    margin = list(t = 0, r = 0, l = 0, b = 0),
-    font = list(color = "white"),
-    paper_bgcolor = "transparent",
-    plot_bgcolor = "transparent") |> 
-  config(displayModeBar = F) |> 
-  htmlwidgets::onRender(
-    "function(el) {
-      var ro = new ResizeObserver(function() {
-         var visible = el.offsetHeight > 200;
-         Plotly.relayout(el, {'xaxis.visible': visible});
-      });
-      ro.observe(el);
-    }")
 
-# value boxes
-vbs <- list(
-  value_box(
-    title = "Personal Savings Rate",
-    value = "7.6%",
-    p("Started at 12.6%"),
-    p("Averaged 8.6% over that period"),
-    p("Peaked 17.3% in May 1975"),
-    showcase = sparkline,
-    full_screen = TRUE,
-    theme = "success"
-  ),
-  
-  value_box(
-    title = "1st value",
-    value = "123",
-    showcase = bs_icon("bar-chart"),
-    theme = "purple",
-    p("The 1st detail")
-  ),
-  
-  value_box(
-    title = "2nd value",
-    value = "456",
-    showcase = bs_icon("graph-up"),
-    theme = "teal",
-    p("The 2nd detail"),
-    p("The 3rd detail")
-  ),
-  
-  value_box(
-    title = "3rd value",
-    value = "789",
-    showcase = bs_icon("pie-chart"),
-    theme = "pink",
-    p("The 4th detail"),
-    p("The 5th detail"),
-    p("The 6th detail")
-  )
-)
+hist_layout <- showcase_left_center(
+  width                  = 0.5,
+  width_full_screen      = "1fr",
+  max_height             = "250px", # default: "100px"
+  max_height_full_screen = 0.77)
+
+# TODO: make reactive to settings for bay_segment, var and years/date
+d_temp <- d_prism_z |>
+  filter(
+    bay_segment           == "TB",
+    variable              == "tdmean") |>
+  rename(value = mean)
+
+d_rain <- d_prism_z |>
+  filter(
+    bay_segment           == "TB",
+    variable              == "ppt") |>
+  rename(value = mean)
+
+d_sst <- d_sst_z |>
+  filter(
+    bay_segment           == "OTB") |>
+  rename(value = val)
+

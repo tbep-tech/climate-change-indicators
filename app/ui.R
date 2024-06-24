@@ -2,15 +2,54 @@ thematic_shiny()
 page_navbar(
   title = "Tampa Bay Climate Change Indicators",
   theme = dark,
-  
+
+  # Overview [v] ----
   nav_panel(
     title = tagList(
       "Overview", bs_icon("compass-fill")),
     layout_column_wrap(
-      width = "250px",
-      !!!vbs ) ),
+      width = "400px",
 
-  # Air Temperature ----
+
+      # * Air Temperature ----
+      value_box(
+        title           = span(
+          "Air Temperature", bs_icon("thermometer-half")),
+        value           =
+          uiOutput("value_temp"),
+          p(uiOutput("caption_temp")),
+        showcase        = plotlyOutput("hist_temp"),
+        showcase_layout = hist_layout,
+        full_screen     = TRUE,
+        theme           = "success" ),
+
+      # * Rain ----
+      value_box(
+        title           = span(
+          "Rain", bs_icon("cloud-rain-fill")),
+        value           =
+          uiOutput("value_rain"),
+          p(uiOutput("caption_rain")),
+        showcase        = plotlyOutput("hist_rain"),
+        showcase_layout = hist_layout,
+        full_screen     = TRUE,
+        theme           = "success" ),
+
+      # * Ocean Temperature ----
+      value_box(
+        title           = span(
+          "Ocean Temperature", bs_icon("thermometer-low")),
+        value           =
+          uiOutput("value_sst"),
+          p(uiOutput("caption_sst")),
+        showcase        = plotlyOutput("hist_sst"),
+        showcase_layout = hist_layout,
+        full_screen     = TRUE,
+        theme           = "success" )
+
+    )),
+
+  # Air Temperature [t] ----
   nav_panel(
     title = tagList(
       "Air Temperature", bs_icon("thermometer-half")),
@@ -39,7 +78,7 @@ page_navbar(
 
             sliderInput(
               "sld_t_yrs_then",
-              "Then year(s)",
+              "Year(s), Then",
               min     = yrs_prism[1],
               value   = c(yrs_prism[1], yrs_prism[1]+20),
               max     = yrs_prism[2] - 1,
@@ -49,7 +88,7 @@ page_navbar(
 
             sliderInput(
               "sld_t_yrs_now",
-              "Now year(s)",
+              "Year(s), Now",
               min     = yrs_prism[1] + 1,
               value   = c(yrs_prism[2], yrs_prism[2]),
               max     = yrs_prism[2],
@@ -103,7 +142,7 @@ page_navbar(
 
         plotlyOutput("plot_temp") ) ) ) ),
 
-  # Rain ----
+  # Rain [r] ----
   nav_panel(
     title = tagList(
       "Rain", bs_icon("cloud-rain-fill")),
@@ -134,7 +173,7 @@ page_navbar(
 
               sliderInput(
                 "sld_r_yrs_then",
-                "Then year(s)",
+                "Year(s), Then",
                 min     = yrs_prism[1],
                 value   = c(yrs_prism[1], yrs_prism[1]+20),
                 max     = yrs_prism[2] - 1,
@@ -144,7 +183,7 @@ page_navbar(
 
               sliderInput(
                 "sld_r_yrs_now",
-                "Now year(s)",
+                "Year(s), Now",
                 min     = yrs_prism[1] + 1,
                 value   = c(yrs_prism[2], yrs_prism[2]),
                 max     = yrs_prism[2],
@@ -183,7 +222,7 @@ page_navbar(
 
           plotlyOutput("plot_rain") ) ) ) ),
 
-  # Sea Level ----
+  # Sea Level [l] ----
   nav_panel(
     title = tagList(
       "Sea Level", bs_icon("water")),
@@ -209,7 +248,7 @@ page_navbar(
             sl_stations),
           plotlyOutput("plot_sl") ) ),
 
-  # Ocean Temperature ----
+  # Ocean Temperature [o] ----
   nav_panel(
     title = tagList(
       "Ocean Temperature", bs_icon("thermometer-low")),
@@ -240,7 +279,7 @@ page_navbar(
 
               sliderInput(
                 "sld_o_yrs_then",
-                "Then year(s)",
+                "Year(s), Then",
                 min     = yrs_prism[1],
                 value   = c(yrs_prism[1], yrs_prism[1]+20),
                 max     = yrs_prism[2] - 1,
@@ -250,7 +289,7 @@ page_navbar(
 
               sliderInput(
                 "sld_o_yrs_now",
-                "Now year(s)",
+                "Year(s), Now",
                 min     = yrs_prism[1] + 1,
                 value   = c(yrs_prism[2], yrs_prism[2]),
                 max     = yrs_prism[2],

@@ -4,7 +4,106 @@ function(input, output, session) {
   observe(session$setCurrentTheme(
     if (isTRUE(input$dark_mode)) dark else light ))
 
-  # map_temp ----
+  # Overview ----
+
+  # * Air Temperature ----
+
+  # ·· rx_temp ----
+  rx_temp <- reactive({
+    suppressWarnings({
+      plot_hist(d_temp)
+    })
+  })
+
+  # ·· value_temp ----
+  output$value_temp <- renderUI({
+    rx_temp() |>
+      attr("value")
+  })
+
+  # ·· caption_temp ----
+  output$caption_temp <- renderUI({
+    rx_temp() |>
+      attr("caption")
+  })
+
+  # ·· hist_temp ----
+  output$hist_temp <- renderPlotly({
+    suppressWarnings({
+      plot_hist(d_temp)
+    })
+  })
+
+  # * Rain ----
+
+  # ·· rx_rain [t] ----
+  rx_rain <- reactive({
+
+    suppressWarnings({
+      plot_hist(
+        d_rain,
+        caption_list = list(
+          value_glue   = "{sign_symbol} {round(abs(avg_diff), 1)} {units}",
+          caption_glue = "
+      The rainfall as of {dates_now} is {round(abs(avg_diff),2)} {units} {sign_text} than the
+      previously recorded average during the years {years_then_text}.",
+          positive = "wetter",
+          negative = "drier",
+          units    = "mm"))
+    })
+  })
+
+  # ·· value_rain [t] ----
+  output$value_rain <- renderUI({
+    rx_rain() |>
+      attr("value")
+  })
+
+  # ·· caption_rain [t] ----
+  output$caption_rain <- renderUI({
+    rx_rain() |>
+      attr("caption")
+  })
+
+  # ·· hist_rain [t] ----
+  output$hist_rain <- renderPlotly({
+    suppressWarnings({
+      plot_hist(d_rain)
+    })
+  })
+
+  # * Ocean Temperature ----
+
+  # ·· rx_sst [t] ----
+  rx_sst <- reactive({
+    suppressWarnings({
+      plot_hist(d_sst)
+    })
+  })
+
+  # ·· value_sst [t] ----
+  output$value_sst <- renderUI({
+    rx_sst() |>
+      attr("value")
+  })
+
+  # ·· caption_sst [t] ----
+  output$caption_sst <- renderUI({
+    rx_sst() |>
+      attr("caption")
+  })
+
+  # ·· hist_sst [t] ----
+  output$hist_sst <- renderPlotly({
+    suppressWarnings({
+      plot_hist(d_sst)
+    })
+
+  })
+
+  # Air Temperature [t] ----
+
+  # * map_temp ----
   output$map_temp <- renderLeaflet({
 
     # DEBUG
@@ -15,7 +114,7 @@ function(input, output, session) {
 
     var        = "tmax"
     var_lbl    = "Temperature (°C)"
-    md         = sprintf("%02d-%02d", month(input$sld_t_md), day(input$sld_t_md))
+    md         = format(input$sld_t_md, "%m-%d")
     yrs_now    = input$sld_t_yrs_now[1]:input$sld_t_yrs_now[2]
     yrs_then   = input$sld_t_yrs_then[1]:input$sld_t_yrs_then[2]
     dates_now  = as.Date(glue("{yrs_now}-{md}"))
@@ -53,7 +152,7 @@ function(input, output, session) {
 
   })
 
-  # plot_temp ----
+  # * plot_temp ----
   output$plot_temp <- renderPlotly({
 
     d_prism_z |>
@@ -67,7 +166,9 @@ function(input, output, session) {
         days_smooth = input$sld_t_days_smooth)
   })
 
-  # map_rain ----
+  # Rain [r] ----
+
+  # * map_rain ----
   output$map_rain <- renderLeaflet({
 
     # DEBUG
@@ -78,7 +179,7 @@ function(input, output, session) {
 
     var        = "ppt"
     var_lbl    = "Rain (mm)"
-    md         = sprintf("%02d-%02d", month(input$sld_r_md), day(input$sld_r_md))
+    md         = format(input$sld_r_md, "%m-%d")
     yrs_now    = input$sld_r_yrs_now[1]:input$sld_r_yrs_now[2]
     yrs_then   = input$sld_r_yrs_then[1]:input$sld_r_yrs_then[2]
     dates_now  = as.Date(glue("{yrs_now}-{md}"))
@@ -118,7 +219,7 @@ function(input, output, session) {
 
   })
 
-  # plot_rain ----
+  # * plot_rain ----
   output$plot_rain <- renderPlotly({
 
     d_prism_z |>
@@ -135,13 +236,14 @@ function(input, output, session) {
       )
   })
 
+  # Sea Level [l] ----
 
-  # map_sl ----
+  # * map_sl ----
   output$map_sl <- renderLeaflet({
     map_sl()
   })
 
-  # plot_sl ----
+  # * plot_sl ----
   output$plot_sl <- renderPlotly({
     # input$map_sl$click
     # TODO: update input$sel_l_stn based on map stn click
@@ -153,7 +255,9 @@ function(input, output, session) {
 
   })
 
-  # map_sst ----
+  # Ocean Temperature [o] ----
+
+  # * map_sst ----
   output$map_sst <- renderLeaflet({
 
     # DEBUG
@@ -163,7 +267,7 @@ function(input, output, session) {
     #   sld_o_yrs_then = c(1981, 2001))
 
     var_lbl    = "Sea Surface Temperature (°C)"
-    md         = sprintf("%02d-%02d", month(input$sld_o_md), day(input$sld_o_md))
+    md         = format(input$sld_o_md, "%m-%d")
     yrs_now    = input$sld_o_yrs_now[1]:input$sld_o_yrs_now[2]
     yrs_then   = input$sld_o_yrs_then[1]:input$sld_o_yrs_then[2]
     dates_now  = as.Date(glue("{yrs_now}-{md}"))
@@ -200,7 +304,7 @@ function(input, output, session) {
       var_lbl)
   })
 
-  # plot_sst ----
+  # * plot_sst ----
   output$plot_sst <- renderPlotly({
 
     d_sst_z |>
