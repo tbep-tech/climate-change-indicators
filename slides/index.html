@@ -323,7 +323,8 @@
     }
   </style>
   <style>
-    .custom-small { font-size: .5em }
+    .custom-small { font-size: .5em; }
+    .reveal p { font-style: normal; }
   </style>
 </head>
 <body class="quarto-light">
@@ -434,13 +435,15 @@ Dr.&nbsp;Marcus W. Beck <a href="mailto:mbeck@TBEP.org" class="email">mbeck@TBEP
 </section>
 <section id="approach" class="slide level2">
 <h2>APPROACH</h2>
+<div>
 <ul>
-<li><strong>Indicators</strong>: relevant to people &amp; ecology, covering land &amp; sea</li>
-<li><strong>Data</strong>: publicly available, current + historical, updated daily, highest possible spatial resolution</li>
-<li><strong>Methods</strong>: open-source, add new functions to <code>tbeptools</code> R package</li>
-<li><strong>Visualizations</strong>: contrast “then” and “now”, accessible to lay person, sufficient for scientist</li>
-<li><strong>Interactivity</strong>: zoom in/out of map &amp; time series, configurable (days/years for now vs then; smoothing days)</li>
+<li class="fragment"><strong>Indicators</strong>: relevant to people &amp; ecology, covering land &amp; sea</li>
+<li class="fragment"><strong>Data</strong>: publicly available, current + historical, updated daily, authoritative, highest possible spatial resolution</li>
+<li class="fragment"><strong>Methods</strong>: open-source, add new functions to <code>tbeptools</code> R package</li>
+<li class="fragment"><strong>Visualizations</strong>: contrast “now” vs “then” (climatology), accessible to lay person, sufficient for scientist</li>
+<li class="fragment"><strong>Interactivity</strong>: zoom in/out of map &amp; time series, and configurable: specify day/years for now vs then, # of smoothing days, …</li>
 </ul>
+</div>
 </section>
 <section id="data-prism" class="slide level2">
 <h2>DATA: PRISM</h2>
@@ -483,18 +486,24 @@ ground gauge station + RADAR; 4km grid, 1981 to present</li>
 </tbody>
 </table>
 </div>
+<div>
 <ul>
-<li>Tabs in app: <strong>Air Temperature</strong>, <strong>Rain</strong></li>
+<li class="fragment">Tabs in app: <strong>Air Temperature</strong>, <strong>Rain</strong></li>
 </ul>
+</div>
 </section>
 <section id="data-noaa-tides-currents" class="slide level2">
 <h2>DATA: NOAA Tides &amp; Currents</h2>
 <div class="columns">
 <div class="column" style="width:60%;">
 <ul>
-<li>Under <a href="https://tidesandcurrents.noaa.gov/">NOAA Tides and Currents</a>, there is the NOAA Center for Operational Oceanographic Products and Services (CO-OPS). Use the <a href="https://api.tidesandcurrents.noaa.gov/api/prod/">CO-OPS Data Retrieval API</a> to extract see level data by station.</li>
-<li>Tabs in app: <strong>Sea Level</strong></li>
+<li>Under <a href="https://tidesandcurrents.noaa.gov/">NOAA Tides and Currents</a>, there is the NOAA Center for Operational Oceanographic Products and Services (CO-OPS). Use the <a href="https://api.tidesandcurrents.noaa.gov/api/prod/">CO-OPS Data Retrieval API</a> to extract sea level data by station.</li>
 </ul>
+<div>
+<ul>
+<li class="fragment">Tabs in app: <strong>Sea Level</strong></li>
+</ul>
+</div>
 </div><div class="column" style="width:40%;">
 <div class="quarto-figure quarto-figure-center">
 <figure>
@@ -507,36 +516,45 @@ ground gauge station + RADAR; 4km grid, 1981 to present</li>
 <section id="data-noaa-coraltemp" class="slide level2">
 <h2>DATA: NOAA CoralTemp</h2>
 <ul>
-<li><p><a href="https://coralreefwatch.noaa.gov/product/5km/index.php">NOAA Coral Reef Watch Daily 5km Satellite Coral Bleaching Heat Stress Monitoring Products (Version 3.1)</a><br>
-5km Sea Surface Temperature (SST) product to monitor coral bleaching heat stress (<a href="https://coralreefwatch.noaa.gov/product/5km/tutorial/crw17a_references.php">Liu et al., 2014</a>), 1985-present</p></li>
-<li><p>Tabs in app: <strong>Ocean Temperature</strong></p></li>
+<li><a href="https://coralreefwatch.noaa.gov/product/5km/index.php">NOAA Coral Reef Watch Daily 5km Satellite Coral Bleaching Heat Stress Monitoring Products (Version 3.1)</a> 5km Sea Surface Temperature (SST) product to monitor coral bleaching heat stress (<a href="https://coralreefwatch.noaa.gov/product/5km/tutorial/crw17a_references.php">Liu et al., 2014</a>), 1985-present</li>
 </ul>
-</section>
-<section id="demo" class="slide level2 smaller">
-<h2>DEMO</h2>
-<p><a href="https://shiny.ecoquants.com/tbcc/">shiny.ecoquants.com/tbcc</a></p>
-<div class="columns">
-<div class="column" style="width:60%;">
-<p><img data-src="app.png" width="800"></p>
-</div><div class="column" style="width:40%;">
+<div>
 <ul>
-<li><strong>Histogram Cards</strong> (A) of historical (white) vs now (red line) with captions</li>
-<li><strong>Swiping Maps</strong> (B) with interactive swiping to compare Then vs Now</li>
-<li><strong>Trend Lines</strong> (C) for sea level rise</li>
-<li><strong>Day of Year</strong> (D) plot with recent (red, orange) vs past (gray)</li>
+<li class="fragment">Tabs in app: <strong>Ocean Temperature</strong></li>
+</ul>
+</div>
+</section>
+<section id="demo" class="slide level2">
+<h2>DEMO</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><a href="https://shiny.ecoquants.com/tbcc/">shiny.ecoquants.com/tbcc</a></p>
+<p><img data-src="app.png" style="width:100.0%"></p>
+<ul>
+<li><strong>Histogram Cards</strong> (A) of “Now” (red line) vs “Then” (white) with avg difference value and explanatory caption (not sea level)</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<ul>
+<li><strong>Swiping Maps</strong> (B) <span class="smaller">to interactively compare “Now” vs “Then” for gridded data (not yet point, ie sea level)</span></li>
+<li><strong>Trend Plot</strong> (C) <span class="smaller">with scatter plot of measurements and fitted trend line for sea level rise</span></li>
+<li><strong>Daily Plot</strong> (D) <span class="smaller">showing day of year on x-axis and “Now” (red this year, orange last year) vs past (gray) for all but sea level</span></li>
 </ul>
 </div>
 </div>
+<p>:::</p>
 </section>
-<section id="questions" class="slide level2">
+<section id="questions" class="slide level2 incremental">
 <h2>QUESTIONS</h2>
 <ul>
 <li>Have we captured appropriate climate change indicators?
 <ul>
 <li>“Heat index”: temperature + humidity?</li>
-<li>Hurricane indicator(s): intensity, frequency or both and over what area?</li>
+<li>Other severe weather / extreme events, like: hurricane – intensity, frequency or both and over what area?; drought, flood or hail</li>
 </ul></li>
-<li>Are the indicators displayed intuitively, are status/trends clear?</li>
+<li>Are the indicators displayed intuitively, are status/trends clear?
+<ul>
+<li>configurations (gear icon) are too few/simple or too many/complex?</li>
+</ul></li>
 <li>Does this information assist with planning or management priorities/actions?</li>
 </ul>
 <div class="quarto-auto-generated-content">

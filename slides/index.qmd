@@ -23,7 +23,8 @@ editor_options:
 include-in-header: 
   text: |
     <style>
-      .custom-small { font-size: .5em }
+      .custom-small { font-size: .5em; }
+      .reveal p { font-style: normal; }
     </style>  
 ---
 
@@ -105,19 +106,23 @@ library(knitr)
 
 ## APPROACH
 
+::: {.incremental}
+
 -   **Indicators**: relevant to people & ecology, covering land & sea
--   **Data**: publicly available, current + historical, updated daily, highest possible spatial resolution
+-   **Data**: publicly available, current + historical, updated daily, authoritative, highest possible spatial resolution
 -   **Methods**: open-source, add new functions to `tbeptools` R package
--   **Visualizations**: contrast "then" and "now", accessible to lay person, sufficient for scientist
--   **Interactivity**: zoom in/out of map & time series, configurable (days/years for now vs then; smoothing days)
+-   **Visualizations**: contrast "now" vs "then" (climatology), accessible to lay person, sufficient for scientist
+-   **Interactivity**: zoom in/out of map & time series, and configurable: specify day/years for now vs then, # of smoothing days, ...
+
+::: 
 
 ------------------------------------------------------------------------
 
-## DATA: PRISM
+## DATA: PRISM 
 
 -   Parameter-elevation Relationship on Independent Slopes Model\
-    [prism.oregonstate.edu](https://prism.oregonstate.edu)\
-    ground gauge station + RADAR; 4km grid, 1981 to present
+[prism.oregonstate.edu](https://prism.oregonstate.edu)\
+ground gauge station + RADAR; 4km grid, 1981 to present
 
 ::: custom-small
 |          |                                               |
@@ -131,7 +136,9 @@ library(knitr)
 | `vpdmax` | Daily maximum vapor pressure deficit          |
 :::
 
+::: {.incremental}
 -   Tabs in app: **Air Temperature**, **Rain**
+:::
 
 ------------------------------------------------------------------------
 
@@ -139,8 +146,14 @@ library(knitr)
 
 ::: columns
 ::::: {.column width="60%"}
--   Under [NOAA Tides and Currents](https://tidesandcurrents.noaa.gov/), there is the NOAA Center for Operational Oceanographic Products and Services (CO-OPS). Use the [CO-OPS Data Retrieval API](https://api.tidesandcurrents.noaa.gov/api/prod/) to extract see level data by station.
+
+
+-   Under [NOAA Tides and Currents](https://tidesandcurrents.noaa.gov/), there is the NOAA Center for Operational Oceanographic Products and Services (CO-OPS). Use the [CO-OPS Data Retrieval API](https://api.tidesandcurrents.noaa.gov/api/prod/) to extract sea level data by station.
+
+::::::: {.incremental}
 -   Tabs in app: **Sea Level**
+:::::::
+
 :::::
 ::::: {.column width="40%"}
 ![](slr_tidesandcurrents.noaa.gov-sltrends.png){fig-align="center" width="100%"}
@@ -151,31 +164,41 @@ library(knitr)
 
 ## DATA: NOAA CoralTemp
 
--   [NOAA Coral Reef Watch Daily 5km Satellite Coral Bleaching Heat Stress Monitoring Products (Version 3.1)](https://coralreefwatch.noaa.gov/product/5km/index.php)\
+-   [NOAA Coral Reef Watch Daily 5km Satellite Coral Bleaching Heat Stress Monitoring Products (Version 3.1)](https://coralreefwatch.noaa.gov/product/5km/index.php)
     5km Sea Surface Temperature (SST) product to monitor coral bleaching heat stress ([Liu et al., 2014](https://coralreefwatch.noaa.gov/product/5km/tutorial/crw17a_references.php)), 1985-present
 
+::: {.incremental}
 -   Tabs in app: **Ocean Temperature**
+:::
 
-## DEMO {.smaller}
+## DEMO 
+
+::: columns
+::::: {.column width="50%"}
 
 [shiny.ecoquants.com/tbcc](https://shiny.ecoquants.com/tbcc/)
 
-::: columns
-::::: {.column width="60%"}
-![](app.png){width=800px}
+![](app.png){width=100%}
+
+- **Histogram Cards** (A) of "Now" (red line) vs "Then" (white) with avg difference value and explanatory caption (not sea level)
+
 :::::
-::::: {.column width="40%"}
-- **Histogram Cards** (A) of historical (white) vs now (red line) with captions
-- **Swiping Maps** (B) with interactive swiping to compare Then vs Now
-- **Trend Lines** (C) for sea level rise
-- **Day of Year** (D) plot with recent (red, orange) vs past (gray)
+::::: {.column width="50%"}
+
+- **Swiping Maps** (B) [to interactively compare "Now" vs "Then" for gridded data (not yet point, ie sea level)]{.smaller}
+- **Trend Plot** (C) [with scatter plot of measurements and fitted trend line for sea level rise]{.smaller}
+- **Daily Plot** (D) [showing day of year on x-axis and "Now" (red this year, orange last year) vs past (gray) for all but sea level]{.smaller}
+:::
+
 :::::
 :::
 
-## QUESTIONS
+## QUESTIONS {.incremental}
 
 -   Have we captured appropriate climate change indicators?
     -   "Heat index": temperature + humidity?
-    -   Hurricane indicator(s): intensity, frequency or both and over what area?
+    -   Other severe weather / extreme events, like: hurricane -- intensity, frequency or both and over what area?; drought, flood or hail
 -   Are the indicators displayed intuitively, are status/trends clear?
+    - configurations (gear icon) are too few/simple or too many/complex?
 -   Does this information assist with planning or management priorities/actions?
+
