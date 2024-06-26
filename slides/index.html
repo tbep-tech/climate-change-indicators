@@ -440,8 +440,8 @@ Dr.&nbsp;Marcus W. Beck <a href="mailto:mbeck@TBEP.org" class="email">mbeck@TBEP
 <div>
 <ul>
 <li class="fragment"><strong>Indicators</strong>: relevant to people &amp; ecology, covering land &amp; sea</li>
-<li class="fragment"><strong>Data</strong>: publicly available, current + historical, updated daily, authoritative, highest possible spatial resolution</li>
-<li class="fragment"><strong>Methods</strong>: open-source, add new functions to <code>tbeptools</code> R package</li>
+<li class="fragment"><strong>Data</strong>: publicly available, current + historical, updated daily, authoritative, highest possible spatial resolution, API endpoint</li>
+<li class="fragment"><strong>Methods</strong>: open-source, add new functions to <code>tbeptools</code> R package, end-to-end reproducibility</li>
 <li class="fragment"><strong>Visualizations</strong>: contrast “now” vs “then” (climatology), accessible to lay person, sufficient for scientist</li>
 <li class="fragment"><strong>Interactivity</strong>: zoom in/out of map &amp; time series, and configurable: specify day/years for now vs then, # of smoothing days, …</li>
 </ul>
@@ -545,20 +545,74 @@ ground gauge station + RADAR; 4km grid, 1981 to present</li>
 </div>
 <p>:::</p>
 </section>
-<section id="questions" class="slide level2 incremental">
-<h2>QUESTIONS</h2>
+<section id="questions-1-of-3" class="slide level2">
+<h2>QUESTIONS (1 of 3)</h2>
+<ol type="1">
+<li><strong>Indicators</strong>. Have we captured appropriate climate change indicators?</li>
+</ol>
+<div>
 <ul>
-<li>Have we captured appropriate climate change indicators?
+<li class="fragment">Add “heat index”: temperature + humidity?</li>
+<li class="fragment">Change water temperature?<br>
+Continue using satellite sea-surface temperature (SST); or<br>
+Swap with <em>in situ</em> measurement?</li>
+<li class="fragment">Add severe weather / extreme events, like:
 <ul>
-<li>“Heat index”: temperature + humidity?</li>
-<li>Other severe weather / extreme events, like: hurricane – intensity, frequency or both and over what area?; drought, flood or hail</li>
+<li class="fragment">Hurricanes – intensity / frequency?;</li>
+<li class="fragment">Drought, flood or hail?</li>
 </ul></li>
-<li>Are the indicators displayed intuitively, are status/trends clear?
-<ul>
-<li>configurations (gear icon) are too few/simple or too many/complex?</li>
-</ul></li>
-<li>Does this information assist with planning or management priorities/actions?</li>
 </ul>
+</div>
+<p>Please share your response: <a href="https://forms.gle/c8CSRRYJo5ST3XP78">Feedback Form</a></p>
+</section>
+<section id="questions-2-of-3" class="slide level2 incremental">
+<h2>QUESTIONS (2 of 3)</h2>
+<ol start="2" type="1">
+<li><strong>User Interface</strong>. Are the indicators displayed intuitively, are status/trends clear?</li>
+</ol>
+<div>
+<ul>
+<li class="fragment">Change Sea Level?<br>
+
+<ul>
+<li class="fragment">Continue using Station Map and Trend Plot; or</li>
+<li class="fragment">Switch to Swiping Map with markers displaying values and Daily Plot of “Then” vs “Now”</li>
+</ul></li>
+<li class="fragment">Configurations (gear icon), too few/simple or many/complex?</li>
+</ul>
+</div>
+<p>Please share your response: <a href="https://forms.gle/c8CSRRYJo5ST3XP78">Feedback Form</a></p>
+</section>
+<section id="questions-3-of-3" class="slide level2 incremental">
+<h2>QUESTIONS (3 of 3)</h2>
+<ol start="3" type="1">
+<li><strong>Management</strong>. Does this information assist with planning or management priorities/actions?</li>
+</ol>
+<p>Please share your response: <a href="https://forms.gle/c8CSRRYJo5ST3XP78">Feedback Form</a></p>
+</section>
+<section id="next-steps" class="slide level2">
+<h2>Next Steps</h2>
+<div>
+<ul>
+<li class="fragment">Create landing page: data quality, limitations, assumptions, etc.</li>
+<li class="fragment">Update <code>tbeptools</code> with new functions</li>
+<li class="fragment">Operationalize on server with daily updates</li>
+</ul>
+</div>
+</section>
+<section id="open-source-reproducible-workflow" class="slide level2">
+<h2>Open-Source, Reproducible Workflow</h2>
+<img data-src="os-workflow.png" class="r-stretch">
+<p>Lowndes, Best et al.&nbsp;(2017) <a href="https://www.nature.com/articles/s41559-017-0160">Our path to better science in less time using open data science tools</a>. <em>Nature Ecology &amp; Evolution</em></p>
+</section>
+<section id="thank-you" class="slide level2">
+<h2>Thank you!</h2>
+<p>Please don’t hesitate to reach out to either of us:</p>
+<ul>
+<li>Ben Best <a href="mailto:ben@EcoQuants.com" class="email">ben@EcoQuants.com</a></li>
+<li>Marcus Beck <a href="mailto:mbeck@TBEP.org" class="email">mbeck@TBEP.org</a></li>
+</ul>
+<p>We would love to hear from you through our <a href="https://forms.gle/c8CSRRYJo5ST3XP78">Feedback Form</a>.</p>
 <div class="quarto-auto-generated-content">
 <p><img src="TBEP_logo.png" class="slide-logo"></p>
 <div class="footer footer-default">

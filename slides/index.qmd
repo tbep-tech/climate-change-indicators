@@ -110,8 +110,8 @@ library(knitr)
 ::: {.incremental}
 
 -   **Indicators**: relevant to people & ecology, covering land & sea
--   **Data**: publicly available, current + historical, updated daily, authoritative, highest possible spatial resolution
--   **Methods**: open-source, add new functions to `tbeptools` R package
+-   **Data**: publicly available, current + historical, updated daily, authoritative, highest possible spatial resolution, API endpoint
+-   **Methods**: open-source, add new functions to `tbeptools` R package, end-to-end reproducibility
 -   **Visualizations**: contrast "now" vs "then" (climatology), accessible to lay person, sufficient for scientist
 -   **Interactivity**: zoom in/out of map & time series, and configurable: specify day/years for now vs then, # of smoothing days, ...
 
@@ -194,12 +194,68 @@ ground gauge station + RADAR; 4km grid, 1981 to present
 :::::
 :::
 
-## QUESTIONS {.incremental}
+## QUESTIONS (1 of 3)
 
--   Have we captured appropriate climate change indicators?
-    -   "Heat index": temperature + humidity?
-    -   Other severe weather / extreme events, like: hurricane -- intensity, frequency or both and over what area?; drought, flood or hail
--   Are the indicators displayed intuitively, are status/trends clear?
-    - configurations (gear icon) are too few/simple or too many/complex?
--   Does this information assist with planning or management priorities/actions?
+1. **Indicators**. Have we captured appropriate climate change indicators?
+
+::: {.incremental}
+
+-   Add "heat index": temperature + humidity?
+-   Change water temperature?\
+    Continue using satellite sea-surface temperature (SST); or\
+    Swap with _in situ_ measurement?
+-   Add severe weather / extreme events, like: 
+    - Hurricanes -- intensity / frequency?; 
+    - Drought, flood or hail?
+
+:::
+
+Please share your response: [Feedback Form](https://forms.gle/c8CSRRYJo5ST3XP78)
+    
+## QUESTIONS (2 of 3) {.incremental}
+
+2.   **User Interface**. Are the indicators displayed intuitively, are status/trends clear?
+
+::: {.incremental}
+
+- Change Sea Level?\
+    - Continue using Station Map and Trend Plot; or
+    - Switch to Swiping Map with markers displaying values and Daily Plot of "Then" vs "Now"
+- Configurations (gear icon), too few/simple or many/complex?
+
+:::
+
+Please share your response: [Feedback Form](https://forms.gle/c8CSRRYJo5ST3XP78)
+  
+## QUESTIONS (3 of 3) {.incremental}
+
+3.   **Management**. Does this information assist with planning or management priorities/actions?
+
+Please share your response: [Feedback Form](https://forms.gle/c8CSRRYJo5ST3XP78)
+
+
+## Next Steps
+
+::: {.incremental}
+-   Create landing page: data quality, limitations, assumptions, etc.
+-   Update `tbeptools` with new functions
+-   Operationalize on server with daily updates
+ 
+:::
+
+## Open-Source, Reproducible Workflow
+
+![](os-workflow.png){.r-stretch}
+
+Lowndes, Best et al. (2017) [Our path to better science in less time using open data science tools](https://www.nature.com/articles/s41559-017-0160). _Nature Ecology & Evolution_
+
+## Thank you!
+
+Please don't hesitate to reach out to either of us:
+
+- Ben Best <ben@EcoQuants.com>
+- Marcus Beck <mbeck@TBEP.org>
+
+We would love to hear from you through our [Feedback Form](https://forms.gle/c8CSRRYJo5ST3XP78).
+
 

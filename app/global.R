@@ -31,7 +31,9 @@ source(here("app/functions.R"))
 options(readr.show_col_types = F)
 
 # themes ----
-light <- bs_theme(preset = "flatly")
+light <- bs_theme(
+  preset = "flatly",
+  base_font = font_google("Playwright+MX"))
 dark  <- bs_theme(preset = "darkly")
 
 # prism ----
