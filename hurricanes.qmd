@@ -1,0 +1,300 @@
+---
+title: "Hurricanes"
+editor_options: 
+  chunk_output_type: console
+---
+
+## Hurricane Center
+
+<https://www.nhc.noaa.gov/TCR_StormReportsIndex.xml>
+
+```{r}
+librarian::shelf(
+  dplyr, purrr, stringr, tibble, tidyr, XML, xml2)
+
+h_xml <- "https://www.nhc.noaa.gov/TCR_StormReportsIndex.xml"
+
+d <- read_xml(h_xml) |> 
+  xmlParse() |> 
+  getNodeSet("//row") |> 
+  xmlToDataFrame() |> 
+  tibble() |> 
+  filter(
+    Basin == "Atlantic")
+d |> 
+  filter(Year == 1958)
+
+d$Year |> table()
+# 1958 1959 1960 1961 1962 1963 1964 1965 1966 1967 1968 1969 1970 1971 1972 1973 1974 1975 1976 1977 
+#   10   10    7   10    5    3   12    6   12    9    7   13    7   11    4    7    8    8    8    6 
+# 1978 1979 1980 1981 1982 1983 1984 1985 1986 1987 1988 1989 1990 1991 1992 1993 1994 1995 1996 1997 
+#   12    9   11   12    6    4   13   11    6    8   12   11   14   10   10   10   12   19   13    7 
+# 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017 
+#   13   15   18   17   14   19   15   29   10   16   17   11   21   19   19   14    9   12   16   18 
+# 2018 2019 2020 2021 2022 2023 
+#   16   18   30   20   16   20
+rx_stormname
+rx_stormreporturl
+
+d |> 
+  mutate(
+    # regular expression for last word before (Atlantic)
+    basin = str_replace(StormName, ".* \\w (Atlantic)") )
+
+https://www.nhc.noaa.gov/gis/best_track/al032023_best_track.zip
+
+
+https://www.nhc.noaa.gov/data/tcr/AL022023_Arlene.pdf
+https://www.nhc.noaa.gov/gis/best_track/al022023_best_track.zip
+https://www.nhc.noaa.gov/gis/best_track/al032023_best_track.zip
+
+d |> 
+  filter(
+    Year == "2023")
+    StormName == "Arlene")
+
+d |> 
+  filter()
+df <- (nodes = )
+df_employees  
+  
+d |> 
+  tidyr::as_tibble()
+  unlist()
+d[[1]] |> 
+map_chr(d, "StormName")
+  tibble(
+    StormName = xml_text(xml_find_first(., "StormName")))
+
+
+d <- d |> as_list()
+d %>% tibble(
+  StormName = map_chr(., "StormName"))
+  
+)
+|> 
+  tibble(StormName = map_chr(., xml_text),
+         b = map_chr(., xml_attr, "onclick"))
+  
+  as_list() |> 
+  pluck("StormReportInfo")
+d[1:3] |> hoist(
+  "row", 
+  year = list("Year", 1L))
+
+as_tibble() 
+
+|> 
+  pluck()
+  as_tibble()
+xml2::data
+
+```
+
+## `HURDAT`
+
+-   [ResidentMario/hurdat2: Process files and docs for the standardization of NOAA HURDAT2 database.](https://github.com/ResidentMario/hurdat2)
+
+```{r}
+librarian::shelf(
+  dplyr, timtrice/HURDAT)
+
+# ?HURDAT
+al <- get_hurdat(basin = "AL") |> tibble()
+range(al$DateTime, na.rm = T)
+# "1851-06-25 00:00:00 LMT" "2023-10-31 18:00:00 CET"
+# ?AL
+
+```
+
+## `HurreconR`
+
+```{r}
+
+```
+
+## `hurricaneexposure`
+
+```{r}
+librarian::shelf(drat)
+addRepo("geanders")
+librarian::shelf(hurricaneexposuredata)
+
+hurr_tracks |> tail()
+
+```
+
+## `rnoaa`
+
+```{r}
+swdi()
+```
+
+-   [Severe Weather Data Inventory](https://www.ncei.noaa.gov/maps/swdi/) map
+
+    1992-2024
+
+-   [Storm Events Database \| NCEI](https://www.ncdc.noaa.gov/stormevents/)\
+    January 1950 to April 2024
+
+    -   [Storm Events Database \| NCEI](https://www.ncdc.noaa.gov/stormevents/details.jsp)\
+        [1. Tornado:]{.underline} From 1950 through 1954, only tornado events were recorded.\
+        \
+        [2. Tornado, Thunderstorm Wind and Hail:]{.underline} From 1955 through 1992, only tornado, thunderstorm wind and hail events were keyed from the paper publications into digital data. From 1993 to 1995, only tornado, thunderstorm wind and hail events have been extracted from the [Unformatted Text Files](https://www.ncdc.noaa.gov/stormevents/details.jsp?type=collection).\
+        \
+        [3. All Event Types (48 from Directive 10-1605):]{.underline} From 1996 to present, 48 event types are recorded as defined in [NWS Directive 10-1605](https://www.nws.noaa.gov/directives/sym/pd01016005curr.pdf).
+
+    -   [Storm Events Database - FAQ \| National Centers for Environmental Information](https://www.ncdc.noaa.gov/stormevents/faq.jsp)\
+        **When does data become available?**
+
+        Due to the amount of time it takes to collect, validate, and enter post Storm Data information, the National Centers for Environmental Information (NCEI) regularly receives Storm Data from the National Weather Service (NWS) approximately 75 days after the end of a data month. (Ex: The January data month is usually available on or around April 15th)
+
+        The NWS has 60 days to submit their data files to the NWS Headquarters in Silver Spring, MD. The NWS Headquarters (NWSHQ) then collects all of the data files from the 123 NWS Forecast Offices. The NCEI receives a copy of this database approximately 75 days after the end of the month. A publication and archive are produced and the Storm Events Database are updated within 75-90 days after the end of a data month.
+
+        ### **Where does the data come from?**
+
+        NCEI receives Storm Data from the National Weather Service. The National Weather service receives their information from a variety of sources, which include but are not limited to: county, state and federal emergency management officials, local law enforcement officials, skywarn spotters, NWS damage surveys, newspaper clipping services, the insurance industry and the general public, among others.
+
+## `noaastormevents`
+
+<https://github.com/geanders/noaastormevents>
+
+## `StormR`: **IBTrACS**
+
+-   [StormR](https://umr-amap.github.io/StormR/): Analyzing the Behaviour of Wind Generated by Tropical Storms and Cyclones
+-   [Journal of Open Source Software: StormR: An R package to quantify and map the tropical storms and cyclones’ winds characteristics](https://joss.theoj.org/papers/10.21105/joss.05766)
+
+-   uses IBTrACS: [International Best Track Archive for Climate Stewardship (IBTrACS) \| National Centers for Environmental Information (NCEI)](https://www.ncei.noaa.gov/products/international-best-track-archive)
+
+-   Updated three times a week (usually on Sunday, Tuesday, and Thursday)
+
+
+```{r}
+librarian::shelf(
+  dplyr, glue, here, mapview, rworldxtra, sf, 
+  StormR, 
+  # umr-amap/StormR,
+  tbep-tech/tbeptools)
+# devtools::load_all("~/Github/bbest/StormR")
+
+url_nc <- "https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r01/access/netcdf/IBTrACS.NA.v04r01.nc" # 4 MB
+nc <- here(glue("data/storms/{basename(url_nc)}")) # 1.1 MB
+
+if (!file.exists(nc)){ # TODO: check if file is up-to-date
+  dir.create(dirname(nc), showWarnings = F)
+  download.file(url_nc, nc)
+}
+
+sds <- defStormsDataset(nc, basin = "NA")
+str(sds)
+length(unique(paste(sds@database$names, sds@database$seasons, " "))) # 622
+
+# get centroid point of Tampa Bay watershed
+pt <- tbeptools::tbshed |> 
+  st_centroid() 
+# st_coordinates(pt) |> as.numeric()
+# -82.35778  27.86714
+buf_km <- 1000
+ply <- pt |> 
+  st_buffer(buf_km*1000)
+
+mapView(ply) +
+  mapView(pt)
+
+c(sds@seasons["min"], sds@seasons["max"]) |> as.integer()
+# 1980 2024
+# st <- defStormsList(sds, pt, maxDist = buf_km, seasons = c(1987,2024)) # FAILS
+
+yrs <- c(1980,2024)
+st <- defStormsList(
+  sds, 
+  pt, 
+  maxDist     = buf_km, 
+  removeUnder = 1,
+  seasons     = yrs)
+
+d <- tibble(
+  storm = getNames(st),
+  year  = getSeasons(st) |> as.numeric(),
+  scale = getScale(st) |> as.numeric()) # A tibble: 67 × 3
+
+d_sum <- d |>
+  group_by(year) |>
+  summarize(
+    sum_scale = sum(scale))
+
+plot(d_sum)
+
+(yr_max <- d_sum$year[which.max(d_sum$sum_scale)])
+
+d |> 
+  filter(year == yr_max)
+
+st_years <- function(st, yrs){
+  # yrs <- c(2000, 2010)
+  st_yrs <- getSeasons(st) |> as.numeric()
+  i_yrs <- st_yrs >= yrs[1] & st_yrs <= yrs[2]
+  st@data <- st@data[i_yrs]
+  st
+}
+
+plotStorms(st_years(st, c(2005, 2005)), dynamicPlot = T)
+plotStorms(st, dynamicPlot = T)
+```
+
+-   By default the Saffir-Simpson hurricane wind scale (SSHS)
+
+```         
+=== Storms processing ... ===
+
+-> Making buffer: Done
+-> Searching storms from 1980 to 2024 ...
+   -> Identifying Storms: 712 potential candidates...
+-> Gathering storm(s) ... 
+  |========================================================================| 100%
+
+=== DONE with run time 4.678652 sec ===
+
+SUMMARY:
+(*) LOI: 277.6422 27.86714 lon-lat
+(*) Buffer size: 300 km
+(*) Number of storms: 79 
+        Name - Tropical season - Scale - Number of observation within buffer:
+Error in sts@data[[ind]] : subscript out of bounds
+```
+
+``` r
+traceback()
+```
+
+```         
+7: getStorm(s, name, season)
+6: getStorm(s, name, season)
+5: .local(s, ...)
+4: getInObs(sts, getNames(sts@data[[i]]), getSeasons(sts@data[[i]]))
+3: getInObs(sts, getNames(sts@data[[i]]), getSeasons(sts@data[[i]]))
+2: cat("       ", getNames(sts@data[[i]]), "-", getSeasons(sts@data[[i]]), 
+       "-", getScale(sts@data[[i]]), "-", length(getInObs(sts, getNames(sts@data[[i]]), 
+           getSeasons(sts@data[[i]]))), "\n")
+1: defStormsList(sds, xy, maxDist = buf_km)
+```
+
+### other
+
+HURDAT2 is considered most authoritative, but per the [NHC Data Archive](https://www.nhc.noaa.gov/data/#hurdat) is only updated annually around April.
+
+
+
+### **Citation**
+
+*New users should document their data usage and provide feedback by completing IBTrACS voluntary [User Registration](https://docs.google.com/forms/d/e/1FAIpQLSew_3icTAEWXWL8INSzBU-GqBzp535LuarsOeaRrCGhR3qWHA/viewform). This information helps the IBTrACS team justify continued updates and support.*
+
+Please use both the BAMS paper and dataset citations when referencing IBTrACS in a written work that has a bibliography:
+
+-   Knapp, K. R., M. C. Kruk, D. H. Levinson, H. J. Diamond, and C. J. Neumann, 2010: The International Best Track Archive for Climate Stewardship (IBTrACS): Unifying tropical cyclone best track data. *Bulletin of the American Meteorological Society*, 91, 363-376. [doi:10.1175/2009BAMS2755.1](https://doi.org/10.1175/2009BAMS2755.1)
+
+-   Gahtan, J., K. R. Knapp, C. J. Schreck, H. J. Diamond, J. P. Kossin, M. C. Kruk, 2024: International Best Track Archive for Climate Stewardship (IBTrACS) Project, Version 4r01. \[indicate subset used\]. NOAA National Centers for Environmental Information. [doi:10.25921/82ty-9e16](https://doi.org/10.25921/82ty-9e16) \[access date\].
+
+When the written work does not have a bibliography, please use:
+
+-   NOAA's International Best Track Archive for Climate Stewardship (IBTrACS) data, accessed on \[Access Date\]
