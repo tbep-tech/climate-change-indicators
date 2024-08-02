@@ -309,6 +309,47 @@ page_navbar(
     )
   ),
 
+  # Hurricanes [h] ----
+  nav_panel(
+    title = tagList(
+      "Hurricanes", bs_icon("tornado")),
+
+    # * map ----
+    card(
+      full_screen = T,
+      card_header(
+        tagList(
+          "Map of hurricane tracks", bs_icon("map") ) ),
+      # TODO: configure option to limit map of hurricane tracks by year
+      leafletOutput("map_h"),
+
+      absolutePanel(
+        id        = "pnl_h_yrs",
+        bottom    = "5%", left = "5%", right = "5%",
+        width     = "90%",
+
+        sliderInput(
+          "sld_h_yrs",
+          "Years",
+          min        = h_yrs[1],
+          value      = c(h_yrs[2] - 1, h_yrs[2]),
+          max        = h_yrs[2],
+          sep        = "",
+          round      = T,
+          step       = 1,
+          animate    = T,
+          width      = "100%") )
+
+      ),
+
+    # * plot ----
+    card(
+      full_screen = T,
+      card_header(
+        tagList(
+          "Plot of hurricanes over time", bs_icon("graph-up-arrow") ) ),
+      plotlyOutput("plot_h") ) ),
+
   # More ----
   nav_spacer(),
   nav_menu(

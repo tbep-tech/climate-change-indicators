@@ -314,4 +314,30 @@ function(input, output, session) {
         days_smooth = input$sld_o_days_smooth)
   })
 
+  # Hurricanes [h] ----
+
+  # * map_sl ----
+  output$map_h <- renderLeaflet({
+
+    h_st |>
+      h_filt_yrs(input$sld_h_yrs) |>
+      plotStorms(dynamicPlot = T)
+
+  })
+
+  # * plot_sl ----
+  output$plot_h <- renderPlotly({
+
+    p <- h_d_sum |>
+      select(year, scale_sum, label_md) |>
+      ggplot(aes(x = year, y = scale_sum, text = label_md)) +
+      geom_line(aes(group = 1)) +
+      geom_point() +
+      scale_x_continuous(
+        limits = h_yrs,
+        expand = c(0, 0))
+
+    ggplotly(p, tooltip = list("text"))
+  })
+
 }
