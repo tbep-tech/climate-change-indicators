@@ -218,18 +218,18 @@ vb <- function(...){
 # TODO: make reactive to settings for bay_segment, var and years/date
 d_temp <- d_prism_z |>
   filter(
-    bay_segment           == "TB",
-    variable              == "tdmean") |>
+    bay_segment == "TB",
+    variable    == "tdmean") |>
   rename(value = mean)
 
 d_rain <- d_prism_z |>
   filter(
-    bay_segment           == "TB",
-    variable              == "ppt") |>
+    bay_segment == "TB",
+    variable    == "ppt") |>
   rename(value = mean)
 
 d_sst <- d_sst_z |>
   filter(
-    bay_segment           == "OTB") |>
+    bay_segment == "OTB") |>
   rename(value = val)
 
