@@ -93,7 +93,7 @@ plot_sl <- function(stn_id, interactive = T) {
   g <-  d |>
     ggplot(aes(x = date, y = msl)) +
     geom_point() +
-    geom_smooth(method = "lm", formula = "y ~ x") +
+    geom_smooth(method = "lm", formula = "y ~ x") + # 95% confidence interval of the predicted mean
     # TODO: settings slider for wiggles (0 = lm)
     # geom_smooth(
     #   method = lm, formula = y ~ splines::bs(x, 5)) +
@@ -305,17 +305,31 @@ plot_hist <- function(
     years_then   = lubridate::year(min(df$date)):(lubridate::year(min(df$date)) + 20),
     color_then   = "white",
     color_now    = "red",
-    caption_list = list(
-      value_glue   = "{sign_symbol} {round(abs(avg_diff), 2)} {units}",
-      caption_glue = "
-      The air temperature as of {dates_now} is {round(abs(avg_diff),2)} {units} {sign_text} than the
+    value_units   = "ºF",
+    value_glue   = "{sign_symbol} {round(abs(avg_diff), 2)} {value_units}",
+    sign_positive = "warmer",
+    sign_negative = "colder",
+    caption_glue = "
+      The air temperature as of {dates_now} is {round(abs(avg_diff),2)} {value_units} {sign} than the
       previously recorded average during the years {years_then_text}.",
-      positive = "warmer",
-      negative = "colder",
-      units    = "ºC"),
-    interactive = TRUE){
+    interactive   = TRUE){
 
   # DEBUG
+  # df           = d_temp
+  # month_day    = format(max(df$date), "%m-%d")
+  # years_now    = lubridate::year(max(df$date))
+  # years_then   = lubridate::year(min(df$date)):(lubridate::year(min(df$date)) + 20)
+  # color_then   = "white"
+  # color_now    = "red"
+  # value_glue   = "{sign_symbol} {round(abs(avg_diff), 2)} {value_units}"
+  # caption_glue = "
+  #     The air temperature as of {dates_now} is {round(abs(avg_diff),2)} {value_units} {sign} than the
+  #     previously recorded average during the years {years_then_text}."
+  # sign_positive = "warmer"
+  # sign_negative = "colder"
+  # value_units   = "ºF"
+  # interactive   = TRUE
+
   # df = d_prism_z |>
   #   filter(
   #     bay_segment           == "TB",
@@ -336,38 +350,70 @@ plot_hist <- function(
     filter(
       !is.na(interval))
 
-    g <- d |>
-      ggplot(aes(x = value, fill = interval, color = interval)) +
-      scale_fill_manual(
-        values = c(
-          Then = color_then,
-          Now  = color_now)) +
-      scale_color_manual(
-        values = c(
-          Then = color_then,
-          Now  = color_now)) +
-      geom_density(
-        alpha = 0.7, color = NA) +
-      stat_summary(
-        aes(xintercept = after_stat(x), y = 0),
-        fun = mean, geom = "vline", orientation = "y") +
-      # theme_minimal() +
-      theme(
-        axis.text=element_text(size=16),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text.y  = element_blank(),
-        axis.ticks.y = element_blank(),
-        legend.title                = element_blank(),
-        legend.position.inside      = c(0.1, 0.9),
-        legend.justification.inside = c(0, 1)) +
-      guides(
-        fill  = guide_legend(position = "inside")) +
-      scale_x_continuous(
-        breaks = function(x) pretty(x, min.n = 3, n=5, high.u.bias = 7),
-        expand = c(0, 0)) +
-      scale_y_continuous(expand = c(0, 0))
+  # handle units ----
+  if (!inherits(d$value, "units")){
+    browser() # DEBUG
+    stop("d$value must have units::units() set.")
+  }
+  value_units_0 <- deparse_unit(d$value)
+  if (value_units != value_units_0){
 
+    if (value_units == "ºF"){
+      # temperature: ºC -> ºF
+      d$value <- d$value |>
+        set_units("degree_F")
+    } else if (value_units == "ºC"){
+      # temperature: ºF -> ºC
+      d$value <- d$value |>
+        set_units("degree_C")
+    } else if (value_units == "in"){
+      # precipitation: mm -> in
+      d$value <- d$value |>
+        set_units("inch")
+    } else if (value_units == "mm"){
+      # precipitation: in -> mm
+      d$value <- d$value |>
+        set_units("mm")
+    } else {
+      stop(glue("Unit conversion from {value_units_0} to {value_units} not yet supported."))
+    }
+  }
+
+  # ggplot ----
+  g <- d |>
+    drop_units() |>
+    ggplot(aes(x = value, fill = interval, color = interval)) +
+    scale_fill_manual(
+      values = c(
+        Then = color_then,
+        Now  = color_now)) +
+    scale_color_manual(
+      values = c(
+        Then = color_then,
+        Now  = color_now)) +
+    geom_density(
+      alpha = 0.7, color = NA) +
+    stat_summary(
+      aes(xintercept = after_stat(x), y = 0),
+      fun = mean, geom = "vline", orientation = "y") +
+    # theme_minimal() +
+    theme(
+      axis.text=element_text(size=16),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      axis.text.y  = element_blank(),
+      axis.ticks.y = element_blank(),
+      legend.title                = element_blank(),
+      legend.position.inside      = c(0.1, 0.9),
+      legend.justification.inside = c(0, 1)) +
+    guides(
+      fill  = guide_legend(position = "inside")) +
+    scale_x_continuous(
+      breaks = function(x) pretty(x, min.n = 3, n=5, high.u.bias = 7),
+      expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0))
+
+  # interactive ----
   if (!interactive){
     o <- g
   } else {
@@ -377,7 +423,7 @@ plot_hist <- function(
   }
 
   # render caption ----
-  attach(caption_list)
+  # attach(caption_list)
 
   if (length(years_now) == 1){
     dates_now <- format(as.Date(glue("{years_now}-{month_day}")), "%b %d, %Y")
@@ -387,6 +433,7 @@ plot_hist <- function(
   }
 
   avg_diff <- d |>
+    drop_units() |>
     group_by(interval) |>
     summarise(
       avg = mean(value)) |>
@@ -395,12 +442,13 @@ plot_hist <- function(
     diff()
   sign_symbol <- ifelse(avg_diff > 0, "+", "-")
 
+  # browser() # DEBUG
   value <- glue(value_glue)
 
-  sign_text <- ifelse(avg_diff > 0, positive, negative)
+  sign <- ifelse(avg_diff > 0, sign_positive, sign_negative)
   years_then_text <- glue("{years_then[1]} to {years_then[length(years_then)]}")
   caption <- glue(caption_glue)
-  detach(caption_list)
+  # detach(caption_list)
 
   attr(o, "value")   <- value
   attr(o, "caption") <- caption

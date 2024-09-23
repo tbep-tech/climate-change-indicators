@@ -24,16 +24,14 @@
 # devtools::load_all(here::here("../tbeptools"))
 librarian::shelf(
   bsicons, bslib, dplyr, glue, here, htmltools, leaflet, leaflet.extras2,
-  lubridate, markdown, plotly, readr, scales, sf, shiny, slider,
+  lubridate, markdown, plotly, purrr, readr, scales, sf, shiny, slider,
   tbep-tech/tbeptools,
-  StormR, terra, thematic, tibble, tidyr)
+  StormR, terra, thematic, tibble, tidyr, units)
 source(here("app/functions.R"))
 options(readr.show_col_types = F)
 
 # themes ----
-light <- bs_theme(
-  preset = "flatly",
-  base_font = font_google("Playwright+MX"))
+light <- bs_theme(preset = "flatly")
 dark  <- bs_theme(preset = "darkly")
 
 # prism ----
@@ -108,12 +106,12 @@ h_sds <- defStormsDataset(h_nc, basin = "NA", verbose = 0) # NA: North Atlantic 
 # str(h_sds)
 # length(unique(paste(h_sds@database$names, h_sds@database$seasons, " "))) # 622
 
-tibble(
-  name     = h_sds@database$names,
-  season   = h_sds@database$seasons,
-  isotime1 = h_sds@database$isotimes[1,],
-  isotime360 = h_sds@database$isotimes[360,]) |>
-  arrange(desc(isotime1))
+# tibble(
+#   name     = h_sds@database$names,
+#   season   = h_sds@database$seasons,
+#   isotime1 = h_sds@database$isotimes[1,],
+#   isotime360 = h_sds@database$isotimes[360,]) |>
+#   arrange(desc(isotime1))
 # # A tibble: 712 × 4
 #   name         season isotime1            isotime360
 #   <chr[1d]> <int[1d]> <chr>               <chr>
@@ -139,10 +137,15 @@ h_st <- defStormsList(
 # getNbStorms(h_st)  # 221
 
 h_d <- tibble(
-  storm = getNames(h_st),
-  year  = getSeasons(h_st) |> as.numeric(),
-  scale = getScale(h_st)   |> as.numeric())  # A tibble: 221 × 3
+  storm    = getNames(h_st),
+  year     = getSeasons(h_st) |> as.numeric(),
+  date_beg = map_chr(h_st@data, ~.@obs.all$iso.time[[1]]) |>
+    as.Date(),
+  yday_beg = yday(date_beg),
+  scale    = getScale(h_st)   |> as.numeric())  # A tibble: 221 × 3
 # tail(h_d)
+
+# h_d$yday_beg
 
 h_d_sum <- h_d |>
   group_by(year) |>
@@ -220,16 +223,22 @@ d_temp <- d_prism_z |>
   filter(
     bay_segment == "TB",
     variable    == "tdmean") |>
-  rename(value = mean)
+  rename(value = mean) |>
+  mutate(
+    value = set_units(value, "degree_C"))
 
 d_rain <- d_prism_z |>
   filter(
     bay_segment == "TB",
     variable    == "ppt") |>
-  rename(value = mean)
+  rename(value = mean) |>
+  mutate(
+    value = set_units(value, "mm"))
 
 d_sst <- d_sst_z |>
   filter(
     bay_segment == "OTB") |>
-  rename(value = val)
+  rename(value = val) |>
+  mutate(
+    value = set_units(value, "degree_C"))
 

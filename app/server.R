@@ -1,8 +1,19 @@
 function(input, output, session) {
 
-  # dark_mode ----
+  # sw_dark ----
   observe(session$setCurrentTheme(
-    if (isTRUE(input$dark_mode)) dark else light ))
+    if (isTRUE(input$sw_dark)) dark else light ))
+
+  # sw_imperial ----
+  observeEvent(input$sw_imperial, {
+    update_switch(
+      "sw_imperial",
+      label = ifelse(
+        input$sw_imperial,
+        "ºF, in",
+        "ºC, mm"),
+      value = input$sw_imperial)
+  })
 
   # Overview ----
 
@@ -11,12 +22,18 @@ function(input, output, session) {
   # ·· rx_temp ----
   rx_temp <- reactive({
     suppressWarnings({
-      plot_hist(d_temp)
+      plot_hist(
+        d_temp,
+        value_units = ifelse(
+          input$sw_imperial,
+          "ºF",
+          "ºC"))
     })
   })
 
   # ·· value_temp ----
   output$value_temp <- renderUI({
+    # browser() # DEBUG
     rx_temp() |>
       attr("value")
   })
@@ -30,7 +47,12 @@ function(input, output, session) {
   # ·· hist_temp ----
   output$hist_temp <- renderPlotly({
     suppressWarnings({
-      plot_hist(d_temp)
+      plot_hist(
+        d_temp,
+        value_units = ifelse(
+          input$sw_imperial,
+          "ºF",
+          "ºC"))
     })
   })
 
@@ -38,18 +60,19 @@ function(input, output, session) {
 
   # ·· rx_rain [t] ----
   rx_rain <- reactive({
-
     suppressWarnings({
       plot_hist(
         d_rain,
-        caption_list = list(
-          value_glue   = "{sign_symbol} {round(abs(avg_diff), 1)} {units}",
-          caption_glue = "
-      The rainfall as of {dates_now} is {round(abs(avg_diff),2)} {units} {sign_text} than the
-      previously recorded average during the years {years_then_text}.",
-          positive = "wetter",
-          negative = "drier",
-          units    = "mm"))
+        value_units   = ifelse(
+          input$sw_imperial,
+          "in",
+          "mm"),
+        value_glue    = "{sign_symbol} {round(abs(avg_diff), 1)} {value_units}",
+        sign_positive = "wetter",
+        sign_negative = "drier",
+        caption_glue  = "
+      The rainfall as of {dates_now} is {round(abs(avg_diff),2)} {value_units} {sign} than the
+      previously recorded average during the years {years_then_text}.")
     })
   })
 
@@ -68,7 +91,12 @@ function(input, output, session) {
   # ·· hist_rain [t] ----
   output$hist_rain <- renderPlotly({
     suppressWarnings({
-      plot_hist(d_rain)
+      plot_hist(
+        d_rain,
+        value_units   = ifelse(
+          input$sw_imperial,
+          "in",
+          "mm"))
     })
   })
 
@@ -77,7 +105,12 @@ function(input, output, session) {
   # ·· rx_sst [t] ----
   rx_sst <- reactive({
     suppressWarnings({
-      plot_hist(d_sst)
+      plot_hist(
+        d_sst,
+        value_units = ifelse(
+          input$sw_imperial,
+          "ºF",
+          "ºC"))
     })
   })
 
@@ -96,9 +129,13 @@ function(input, output, session) {
   # ·· hist_sst [t] ----
   output$hist_sst <- renderPlotly({
     suppressWarnings({
-      plot_hist(d_sst)
+      plot_hist(
+        d_sst,
+        value_units = ifelse(
+          input$sw_imperial,
+          "ºF",
+          "ºC"))
     })
-
   })
 
   # Air Temperature [t] ----
@@ -145,7 +182,7 @@ function(input, output, session) {
     map_then_now(
       r_then,
       r_now,
-      dark_mode = isTRUE(input$dark_mode),
+      dark_mode = isTRUE(input$sw_dark),
       lgnd_then,
       lgnd_now,
       var_lbl)
@@ -210,7 +247,7 @@ function(input, output, session) {
     map_then_now(
       r_then,
       r_now,
-      dark_mode = isTRUE(input$dark_mode),
+      dark_mode = isTRUE(input$sw_dark),
       lgnd_then,
       lgnd_now,
       var_lbl,
@@ -298,7 +335,7 @@ function(input, output, session) {
     map_then_now(
       r_then,
       r_now,
-      dark_mode = isTRUE(input$dark_mode),
+      dark_mode = isTRUE(input$sw_dark),
       lgnd_then,
       lgnd_now,
       var_lbl)
