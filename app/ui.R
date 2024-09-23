@@ -368,7 +368,12 @@ page_navbar(
         href   = "https://tbep-tech.github.io/climate-change-indicators/",
         target = "_blank") ) ),
 
-  # dark_mode ----
+  # sw_dark ----
   nav_item(
-    input_switch("dark_mode", bs_icon("moon-stars-fill"), TRUE) )
+    input_switch("sw_dark", bs_icon("moon-stars-fill"), TRUE) ),
+
+  # sw_imperial ----
+  nav_item(
+    input_switch("sw_imperial", "ºF, in", TRUE) ),
+
 )
