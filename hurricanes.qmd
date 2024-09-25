@@ -19,7 +19,7 @@ editor_options:
 
 ```{r}
 librarian::shelf(
-  dplyr, glue, here, mapview, rworldxtra, sf, 
+  dplyr, glue, here, mapview, purrr, rworldxtra, sf, 
   StormR, 
   # umr-amap/StormR,
   tbep-tech/tbeptools, quiet = T)
@@ -63,11 +63,13 @@ st <- defStormsList(
   verbose     = 0)
 
 d <- tibble(
-  storm = getNames(st),
-  year  = getSeasons(st) |> as.numeric(),
-  scale = getScale(st) |> as.numeric()) # A tibble: 67 × 3
-d
+  storm    = getNames(st),
+  year     = getSeasons(st) |> as.numeric(),
+  date_beg = map_chr(st@data, ~.@obs.all$iso.time[[1]]) |> 
+    as.Date(),
+  scale    = getScale(st) |> as.numeric()) # A tibble: 234 × 4
 
+# unlist(lapply(s@data, getSeasons)))
 d_sum <- d |>
   group_by(year) |>
   summarize(
