@@ -42,11 +42,14 @@ page_navbar(
       card(
         full_screen = T,
         card_header(
-          "Air Temperature - Map of Then vs Now",
+          class = "d-flex",       # r-align gear icon
+          span(
+            "Air Temperature - Map of Then vs Now",
+            class = "me-auto"),   # r-align gear icon
 
           popover(
             title = "Settings",
-            bs_icon("gear", class = "ms-auto"),
+            bs_icon("gear"),
 
             selectInput(
               "sel_t_var",
@@ -100,11 +103,14 @@ page_navbar(
       card(
         full_screen = T,
         card_header(
-          "Air Temperature - Day of year for all years",
+          class = "d-flex",       # r-align gear icon
+          span(
+            "Air Temperature - Day of year for all years",
+            class = "me-auto"),   # r-align gear icon
 
           popover(
             title = "Settings",
-            bs_icon("gear", class = "ms-auto"),
+            bs_icon("gear"),
 
             sliderInput(
               "sld_t_days_smooth",
@@ -136,11 +142,14 @@ page_navbar(
         card(
           full_screen = T,
           card_header(
-            "Precipitation - Map of Then vs Now",
+            class = "d-flex",       # r-align gear icon
+            span(
+              "Precipitation - Map of Then vs Now",
+              class = "me-auto"),   # r-align gear icon
 
             popover(
               title = "Settings",
-              bs_icon("gear", class = "ms-auto"),
+              bs_icon("gear"),
 
               sliderInput(
                 "sld_r_md",
@@ -180,11 +189,14 @@ page_navbar(
         card(
           full_screen = T,
           card_header(
-            "Air Temperature - Day of year for all years",
+            class = "d-flex",       # r-align gear icon
+            span(
+              "Air Temperature - Day of year for all years",
+              class = "me-auto"),   # r-align gear icon
 
             popover(
               title = "Settings",
-              bs_icon("gear", class = "ms-auto"),
+              bs_icon("gear"),
 
               sliderInput(
                 "sld_r_days_smooth",
@@ -241,12 +253,15 @@ page_navbar(
         card(
           full_screen = T,
           card_header(
-            "Sea Surface Temperate - Map of Then vs Now",
+            class = "d-flex",       # r-align gear icon
+            span(
+              "Sea Surface Temperate - Map of Then vs Now",
+              class = "me-auto"),   # r-align gear icon
 
             popover(
               title = "Settings",
               placement = "right",
-              bs_icon("gear", class = "ms-auto"),
+              bs_icon("gear"),
 
               sliderInput(
                 "sld_o_md",
@@ -286,11 +301,14 @@ page_navbar(
         card(
           full_screen = T,
           card_header(
-            "Sea Surface Temperature - Day of year for all years",
+            class = "d-flex",       # r-align gear icon
+            span(
+              "Sea Surface Temperature - Day of year for all years",
+              class = "me-auto"),   # r-align gear icon
 
             popover(
               title = "Settings",
-              bs_icon("gear", class = "ms-auto"),
+              bs_icon("gear"),
 
               sliderInput(
                 "sld_o_days_smooth",
@@ -346,8 +364,23 @@ page_navbar(
     card(
       full_screen = T,
       card_header(
-        tagList(
-          "Plot of hurricanes over time", bs_icon("graph-up-arrow") ) ),
+        class = "d-flex",       # r-align gear icon
+        span(
+          "Plot of hurricanes over time", bs_icon("graph-up-arrow"),
+          class = "me-auto"),   # r-align gear icon
+        popover(
+          title     = "Settings",
+          bs_icon("gear"),
+
+          sliderInput(
+            "sld_h_yr_split",
+            "Year Split",
+            min     = min(h_d_sum$year),
+            value   = 2000,
+            max     = max(h_d_sum$year),
+            step    = 1,
+            animate = T,
+            sep     = "") ) ),
       plotlyOutput("plot_h") ) ),
 
   # More ----

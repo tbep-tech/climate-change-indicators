@@ -4,16 +4,16 @@
 # - [ ] make sld_{t}_tmp 2-values and process
 # - [ ] handle tmean w/ reactive; sel_t_var implement in map_prism_temp w/ avg
 # - [ ] reuse time slider processing with a functions.R
-# - [ ] convert prism units: ºC -> ºF, mm -> in
 # - [ ] prism: show `version`, `date_updated`
 # - [ ] show sources for prism, sst, etc with About and links per card
 # - [ ] observe and update map_sl <-> plot_sl with click and highlight station in map_sl
-# - [ ] move gears to right with Settings label
 # - [ ] temp: heat index using dewpoint (`tdmean` -> humidity)
 # - [ ] + density histogram below map for selected now & then times
 # - [ ] migrate viz functions.R to tbeptools
 # - [ ] create static figures for reports (auto parameterize rendered)
 # - [ ] swiper maps: leaflet-proxy-map updates to layers so can zoom / pan without refresh
+# - [x] move settings (gear icon) to right of card headers
+# - [x] convert prism units: ºC -> ºF, mm -> in
 # - [x] add sea level plot with linear fit and map for stations
 # - [x] icons for Map | Plot
 # - [x] swiper maps: precipitation, ocean temperature
@@ -97,7 +97,9 @@ h_url <- "https://www.ncei.noaa.gov/data/international-best-track-archive-for-cl
 h_nc  <- here(glue("data/storms/{basename(h_url)}"))
 
 # get latest if not exists or older than 3 days
-if (!file.exists(h_nc) || (difftime(now(), file.mtime(h_nc), units = "days") > 3)){
+# TODO: resolve functions.R:get_hurricanes()
+# DEBUG on plane
+if (FALSE && (!file.exists(h_nc) || (difftime(now(), file.mtime(h_nc), units = "days") > 3))){
   dir.create(dirname(h_nc), showWarnings = F)
   download.file(h_url, h_nc, quiet = T)
 }

@@ -353,7 +353,7 @@ function(input, output, session) {
 
   # Hurricanes [h] ----
 
-  # * map_sl ----
+  # * map_h ----
   output$map_h <- renderLeaflet({
 
     h_st |>
@@ -362,17 +362,41 @@ function(input, output, session) {
 
   })
 
-  # * plot_sl ----
+  # * plot_h ----
   output$plot_h <- renderPlotly({
 
-    p <- h_d_sum |>
+    # browser()
+    d <- h_d_sum |>
       select(year, scale_sum, label_md) |>
+      mutate(
+        yr_grp = case_when(
+          year > input$sld_h_yr_split  ~ "Now",
+          TRUE                         ~ "Then"))
+
+    d_g <- d |>
+      group_by(yr_grp) |>
+      summarise(
+        yr_min = min(year),
+        yr_max = max(year),
+        avg    = mean(scale_sum))
+
+    p <- d |>
       ggplot(aes(x = year, y = scale_sum, text = label_md)) +
       geom_line(aes(group = 1)) +
       geom_point() +
       scale_x_continuous(
         limits = h_yrs,
-        expand = c(0, 0))
+        expand = c(0, 0)) +
+      geom_segment(
+        aes(
+          x     = yr_min,
+          xend  = yr_max,
+          y     = avg,
+          yend  = avg,
+          text  = NULL,
+          group = yr_grp),
+        data = d_g,
+        linetype = "dashed")
 
     ggplotly(p, tooltip = list("text"))
   })
