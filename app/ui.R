@@ -26,7 +26,14 @@ page_navbar(
       vb(
         title    = span("Ocean Temperature", bs_icon("thermometer-low")),
         value    = uiOutput("value_sst"), p(uiOutput("caption_sst")),
-        showcase = plotlyOutput("hist_sst"))
+        showcase = plotlyOutput("hist_sst")),
+
+      # * Hurricanes ----
+      vb(
+        title    = span("Hurricanes", bs_icon("tornado")),
+        value    = uiOutput("value_hurricanes"), p(uiOutput("caption_hurricanes")),
+        showcase = plotlyOutput("bar_hurricanes"))
+
     )),
 
   # Air Temperature [t] ----
@@ -376,7 +383,7 @@ page_navbar(
             "sld_h_yr_split",
             "Year Split",
             min     = min(h_d_sum$year),
-            value   = 2000,
+            value   = h_yr_split,
             max     = max(h_d_sum$year),
             step    = 1,
             animate = T,

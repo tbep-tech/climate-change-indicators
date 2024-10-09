@@ -213,6 +213,29 @@ h_filt_yrs <- function(st, yrs){
 # plotStorms(h_filt_yrs(h_st, c(2005, 2005)), dynamicPlot = T)
 # plotStorms(h_st, dynamicPlot = T)
 
+h_yr_split <- 2000
+h_g <- h_d_sum |>
+  select(year, scale_sum) |>
+  mutate(
+    yr_grp = case_when(
+      year >= h_yr_split ~ glue(">= {h_yr_split}"),
+      TRUE              ~ glue("< {h_yr_split}"))) |>
+  group_by(yr_grp) |>
+  summarise(
+    yr_min = min(year),
+    yr_max = max(year),
+    avg    = mean(scale_sum))
+
+h_bar <- h_g |>
+  ggplot(aes(x = yr_grp, y = avg)) +
+  geom_col() +
+  ggplot2::labs(
+    # title = "Hurricanes",
+    x     = "Year group",
+    y     = "Category sum")
+  # scale_y_continuous(
+  #   expand = c(0, 0)) +
+
 # overview ----
 
 vb <- function(...){

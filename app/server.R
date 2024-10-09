@@ -138,6 +138,26 @@ function(input, output, session) {
     })
   })
 
+  output$value_hurricanes <- renderUI({
+    v <- diff(h_g$avg)
+    if (v > 0)
+      v <- paste("+", v)
+    v
+  })
+
+  output$caption_hurricanes <- renderUI({
+    v <- diff(h_g$avg)
+    sign_v <- ifelse(v > 0, "increased", "decreased")
+    glue("The annual average sum of hurricane categories has {sign_v} by
+         {diff(h_g$avg)} since {h_yr_split}.")
+  })
+
+  output$bar_hurricanes <- renderPlotly({
+    ggplotly(h_bar)
+
+  })
+
+
   # Air Temperature [t] ----
 
   # * map_temp ----
