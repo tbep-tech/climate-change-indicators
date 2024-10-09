@@ -1,4 +1,6 @@
 # TODO:
+# - [ ] switch SST to https://coastwatch.pfeg.noaa.gov/erddap/griddap/NOAA_DHW.html
+# - [ ] add prism_ytd processing and map
 # - [ ] add landing page, with value_box() and possibly sparklines
 # - [ ] add avg (before 2 yrs ago) to plot_doy() colored blue
 # - [ ] make sld_{t}_tmp 2-values and process
@@ -36,9 +38,12 @@ dark  <- bs_theme(preset = "darkly")
 
 # prism ----
 dir_prism     <- here("data/prism")
+dir_prismytd  <- here("data/prism_ytd")
 prism_csv     <- here("data/prism.csv")
+prismytd_csv  <- here("data/prism.csv")
 
 d_prism_r     <- read_prism_rasters(dir_prism)
+d_prismytd_r  <- read_prism_rasters(dir_prismytd)
 yrs_prism     <- range(year(d_prism_r$date))
 now_prism     <- max(d_prism_r$date)
 d_prism_z     <- read_csv(prism_csv)
@@ -232,7 +237,7 @@ d_temp <- d_prism_z |>
 d_rain <- d_prism_z |>
   filter(
     bay_segment == "TB",
-    variable    == "ppt") |>
+    variable    == "pptytd") |>
   rename(value = mean) |>
   mutate(
     value = set_units(value, "mm"))

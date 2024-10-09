@@ -71,8 +71,8 @@ function(input, output, session) {
         sign_positive = "wetter",
         sign_negative = "drier",
         caption_glue  = "
-      The rainfall as of {dates_now} is {round(abs(avg_diff),2)} {value_units} {sign} than the
-      previously recorded average during the years {years_then_text}.")
+      The rainfall this year up to {dates_now} is {round(abs(avg_diff),2)} {value_units} {sign} than the
+      previously recorded average year to date rainfall during the years {years_then_text}.")
     })
   })
 
@@ -208,14 +208,15 @@ function(input, output, session) {
   # * map_rain ----
   output$map_rain <- renderLeaflet({
 
-    # DEBUG
-    # input <- list(
-    #   sld_md       = as.Date("2024-07-22"),
-    #   sld_yrs_now  = c(2024, 2024),
-    #   sld_yrs_then = c(1981, 2001))
+    var        = "pptytd"
+    var_lbl    = "Rain (mm)<br>year to date"
 
-    var        = "ppt"
-    var_lbl    = "Rain (mm)"
+    # DEBUG
+    # input = list(
+    #   sld_r_md       = as.Date("2024-10-07"),
+    #   sld_r_yrs_now  = c(2024, 2024),
+    #   sld_r_yrs_then = c(1981, 2001))
+
     md         = format(input$sld_r_md, "%m-%d")
     yrs_now    = input$sld_r_yrs_now[1]:input$sld_r_yrs_now[2]
     yrs_then   = input$sld_r_yrs_then[1]:input$sld_r_yrs_then[2]
@@ -261,7 +262,7 @@ function(input, output, session) {
 
     d_prism_z |>
       filter(
-        variable    == "ppt",
+        variable    == "pptytd",
         bay_segment == input$sld_r_seg) |>
       mutate(
         time = as.POSIXct(date)) |>
@@ -270,7 +271,7 @@ function(input, output, session) {
         days_smooth    = input$sld_r_days_smooth,
         color_thisyear = "purple",
         color_lastyear = "darkblue",
-      )
+        ylab           = "Rain, year to date (mm)")
   })
 
   # Sea Level [l] ----

@@ -1,3 +1,34 @@
+get_hurricanes_nc <- function(
+    in_nc           = "https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r01/access/netcdf/IBTrACS.NA.v04r01.nc",
+    out_nc          = here::here(glue::glue("data/storms/{basename(in_nc)}")),
+    ndays_skip      = 1){
+  # in_nc
+  # out_nc
+  # ndays_skip: tolerance for number of days old between in_nc and out_nc to skip downloadl; set to 0 to force download
+
+  # TODO: use crul to get last modified remote file
+  # - see global.R function
+  crul::HttpClient$new(
+    in_nc,
+    opts = list(verbose = TRUE))$head()
+
+  # curl::multi_download(
+  #   urls          = in_nc,
+  #   destfile      = out_nc,
+  #   timecondition = 3,
+  #   timevalue     = as.numeric(file.info(localDest)$mtime))
+
+  # if (!file.exists(out_nc)){    # TODO: check if file is up-to-date
+  #   file.info(nc)
+  #
+  # if (!file.exists(out_nc)){    # TODO: check if file is up-to-date
+  #   dir.create(dirname(nc), showWarnings = F)
+  #   download.file(url_nc, nc)
+  # }
+  out_nc
+}
+
+
 get_prism_r <- function(dates, var){  # dates = dates_then
   d <- d_prism_r |>
     filter(
@@ -201,7 +232,8 @@ plot_doy <- function(
     size_thisyear    = 1.5,
     size_lastyear    = 1,
     size_otheryears  = 0.5,
-    interactive      = TRUE){
+    interactive      = TRUE,
+    ylab             = "Temperature (ºC)"){
   # bay_segment = "BCB"
   # df = d_sst_z
 
@@ -289,7 +321,7 @@ plot_doy <- function(
       expand = c(0, 0)) +
     labs(
       x = "Day of year",
-      y = "Temperature (ºC)")
+      y = ylab)
 
   if (!interactive)
     return(g)

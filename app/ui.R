@@ -191,7 +191,7 @@ page_navbar(
           card_header(
             class = "d-flex",       # r-align gear icon
             span(
-              "Air Temperature - Day of year for all years",
+              "Rain, year to date - Day of year for all years",
               class = "me-auto"),   # r-align gear icon
 
             popover(
