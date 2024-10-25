@@ -1476,16 +1476,51 @@ mapView(tbsegshed, col.regions="gray") +
 ```
 
 ```{r}
+#| label: mv-ed-sst
+#| eval: false
+
+# quick fix for migrating from deprecated ERDDAP dataset to newer
+
+# OLD: 
+  # ed_extract(
+  #   ed  = ed_info("https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstDaily.html"),
+  #   var = "analysed_sst", ...)
+# NEW: 
+  # ed_extract(
+  #   ed  = ed_info("https://coastwatch.pfeg.noaa.gov/erddap/griddap/NOAA_DHW.html"),
+  #   var = "CRW_SST", ...)
+
+librarian::shelf(
+  here, readr, stringr, terra)
+z_csv <- here("data/sst/tb_sst.csv")
+r_tif <- here("data/sst/tb_sst.tif")
+read_csv(z_csv) |> 
+  mutate(
+    var = "CRW_SST",
+    lyr = str_replace(lyr, "analysed_sst", "CRW_SST")) |> 
+  write_csv(z_csv)
+r <- rast(r_tif)
+names(r) <- names(r) |> 
+  str_replace("analysed_sst", "CRW_SST")
+r_tmp <- tempfile(fileext = ".tif")
+writeRaster(r, r_tmp)
+file.copy(r_tmp, r_tif, overwrite = T)
+unlink(r_tmp)
+```
+
+
+```{r}
 #| label: get-sst
 #| eval: false
 
+# devtools::load_all("~/Github/marinebon/extractr")
 librarian::shelf(
   marinebon/extractr,
   here)
 
 ed_extract(
-  ed        = ed_info("https://coastwatch.noaa.gov/erddap/griddap/noaacrwsstDaily.html"),
-  var       = "analysed_sst",
+  ed        = ed_info("https://coastwatch.pfeg.noaa.gov/erddap/griddap/NOAA_DHW.html"),
+  var       = "CRW_SST",
   bbox      = c(xmin = -83.0, ymin = 27.2, xmax = -82.3, ymax= 28.5),
   aoi       = tbeptools::tbsegshed,
   zonal_csv = here("data/sst/tbep_sst.csv"),
