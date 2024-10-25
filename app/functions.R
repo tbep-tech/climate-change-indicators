@@ -1,17 +1,19 @@
-get_hurricanes_nc <- function(
-    in_nc           = "https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r01/access/netcdf/IBTrACS.NA.v04r01.nc",
-    out_nc          = here::here(glue::glue("data/storms/{basename(in_nc)}"))){
-  # only download if in_nc (url) newer than out_nc (destfile)
+download_new <- function(
+    url,
+    file){
+  # only download if url newer than local file
 
   resp <- curl::multi_download(
-    urls          = in_nc,
-    destfile      = out_nc,
+    urls          = url,
+    destfile      = file,
     timecondition = 1,
-    timevalue     = as.numeric(file.info(out_nc)$mtime))
+    timevalue     = as.numeric(file.info(file)$mtime),
+    progress      = F)
+
   if (!resp$success)
     stop(resp$error)
 
-  out_nc
+  invisible()
 }
 
 

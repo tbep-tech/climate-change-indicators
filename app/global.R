@@ -98,16 +98,11 @@ ctr <- tbeptools::tbshed |>
 # -82.35778  27.86714
 
 # hurricanes ----
-h_url <- "https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r01/access/netcdf/IBTrACS.NA.v04r01.nc" # 4 MB
+h_url <- "https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r01/access/netcdf/IBTrACS.NA.v04r01.nc"
 h_nc  <- here(glue("data/storms/{basename(h_url)}"))
 
-# get latest if not exists or older than 3 days
-# TODO: resolve functions.R:get_hurricanes()
-# DEBUG on plane
-if (FALSE && (!file.exists(h_nc) || (difftime(now(), file.mtime(h_nc), units = "days") > 3))){
-  dir.create(dirname(h_nc), showWarnings = F)
-  download.file(h_url, h_nc, quiet = T)
-}
+# download if online newer than local
+download_new(h_url, h_nc)
 
 h_sds <- defStormsDataset(h_nc, basin = "NA", verbose = 0) # NA: North Atlantic basin
 # str(h_sds)
@@ -214,12 +209,14 @@ h_filt_yrs <- function(st, yrs){
 # plotStorms(h_st, dynamicPlot = T)
 
 h_yr_split <- 2000
-h_g <- h_d_sum |>
+h_s <- h_d_sum |>
   select(year, scale_sum) |>
   mutate(
     yr_grp = case_when(
       year >= h_yr_split ~ glue(">= {h_yr_split}"),
-      TRUE              ~ glue("< {h_yr_split}"))) |>
+      TRUE              ~ glue("< {h_yr_split}")) |>
+      as.factor())
+h_g <- h_s |>
   group_by(yr_grp) |>
   summarise(
     yr_min = min(year),
@@ -229,22 +226,42 @@ h_g <- h_d_sum |>
 h_bar <- h_g |>
   ggplot(aes(x = yr_grp, y = avg)) +
   geom_col() +
-  ggplot2::labs(
-    # title = "Hurricanes",
-    x     = "Year group",
-    y     = "Category sum")
-  # scale_y_continuous(
-  #   expand = c(0, 0)) +
+  ggplot2::labs(x = NULL, y = NULL) +
+  coord_cartesian(ylim = expand_range(h_g$avg, mul=0.1)) +
+  theme(
+    axis.text=element_text(size=12))
+
+# librarian::shelf("homerhanumat/bpexploder")
+# h_bar <- bpexploder(
+#   data = iris,
+#   settings = list(
+#     groupVar = "Species",
+#     levels = levels(iris$Species),
+#     yVar = "Petal.Length",
+#     tipText = list(
+#       Petal.Length = "Petal Length"),
+#     relativeWidth = 0.75))
+# bpexploder(
+#   data = h_s,
+#   settings = list(
+#     groupVar = "yr_grp",
+#     # levels   = levels(h_s$yr_grp),
+#     yVar     = "scale_sum",
+#     # tipText = list(
+#     #   scale_sum = "sum(Cat)",
+#     #   year      = "Year"),
+#     relativeWidth = 0.75))
 
 # overview ----
 
 vb <- function(...){
   value_box(
     showcase_layout = showcase_bottom(
-      height     = 0.5),
-    max_height      = "300px",
-    full_screen     = TRUE,
-    theme           = "primary",
+      height     = 0.5,
+      max_height = "200px"),
+    max_height   = "350px",
+    full_screen  = TRUE,
+    theme        = "primary",
     ...)
 }
 

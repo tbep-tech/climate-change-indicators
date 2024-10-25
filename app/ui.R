@@ -33,6 +33,7 @@ page_navbar(
         title    = span("Hurricanes", bs_icon("tornado")),
         value    = uiOutput("value_hurricanes"), p(uiOutput("caption_hurricanes")),
         showcase = plotlyOutput("bar_hurricanes"))
+        # showcase = bpexploderOutput("bar_hurricanes", height = "auto"))
 
     )),
 

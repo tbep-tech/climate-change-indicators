@@ -58,7 +58,7 @@ function(input, output, session) {
 
   # * Rain ----
 
-  # ·· rx_rain [t] ----
+  # ·· rx_rain ----
   rx_rain <- reactive({
     suppressWarnings({
       plot_hist(
@@ -76,19 +76,19 @@ function(input, output, session) {
     })
   })
 
-  # ·· value_rain [t] ----
+  # ·· value_rain ----
   output$value_rain <- renderUI({
     rx_rain() |>
       attr("value")
   })
 
-  # ·· caption_rain [t] ----
+  # ·· caption_rain ----
   output$caption_rain <- renderUI({
     rx_rain() |>
       attr("caption")
   })
 
-  # ·· hist_rain [t] ----
+  # ·· hist_rain ----
   output$hist_rain <- renderPlotly({
     suppressWarnings({
       plot_hist(
@@ -102,7 +102,7 @@ function(input, output, session) {
 
   # * Ocean Temperature ----
 
-  # ·· rx_sst [t] ----
+  # ·· rx_sst ----
   rx_sst <- reactive({
     suppressWarnings({
       plot_hist(
@@ -114,19 +114,19 @@ function(input, output, session) {
     })
   })
 
-  # ·· value_sst [t] ----
+  # ·· value_sst ----
   output$value_sst <- renderUI({
     rx_sst() |>
       attr("value")
   })
 
-  # ·· caption_sst [t] ----
+  # ·· caption_sst ----
   output$caption_sst <- renderUI({
     rx_sst() |>
       attr("caption")
   })
 
-  # ·· hist_sst [t] ----
+  # ·· hist_sst ----
   output$hist_sst <- renderPlotly({
     suppressWarnings({
       plot_hist(
@@ -138,24 +138,31 @@ function(input, output, session) {
     })
   })
 
+  # * Hurricanes ----
+
+  # ·· value_hurricanes ----
   output$value_hurricanes <- renderUI({
     v <- diff(h_g$avg)
     if (v > 0)
       v <- paste("+", v)
-    v
+    paste(v, "cat")
   })
 
+  # ·· caption_hurricanes ----
   output$caption_hurricanes <- renderUI({
     v <- diff(h_g$avg)
     sign_v <- ifelse(v > 0, "increased", "decreased")
-    glue("The annual average sum of hurricane categories has {sign_v} by
+    glue("The annual average sum of hurricane categories (cat) has {sign_v} by
          {diff(h_g$avg)} since {h_yr_split}.")
   })
 
+  # ·· bar_hurricanes ----
   output$bar_hurricanes <- renderPlotly({
     ggplotly(h_bar)
-
   })
+  # output$bar_hurricanes <- renderBpexploder({
+  #   h_bar
+  # })
 
 
   # Air Temperature [t] ----
