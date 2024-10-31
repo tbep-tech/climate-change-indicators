@@ -1508,6 +1508,74 @@ file.copy(r_tmp, r_tif, overwrite = T)
 unlink(r_tmp)
 ```
 
+```{r}
+librarian::shelf(
+  here, readr, stringr, terra)
+
+z_n_csv <- here("data/sst/tb_sst_new.csv")
+r_n_tif <- here("data/sst/tb_sst_new.tif")
+z_o_csv <- here("data/sst/tb_sst_old.csv")
+r_o_tif <- here("data/sst/tb_sst_old.tif")
+r_tif   <- here("data/sst/tb_sst.tif")
+
+z_n <- read_csv(z_n_csv)
+z_o <- read_csv(z_o_csv)
+nrow(z_n)
+nrow(z_o)
+max(z_o$time)
+max(z_n$time)
+
+setdiff(z_n$time, max(z_o$time)) |> as.Date()
+range(z_n$time)
+range(z_o$time)
+
+r_n <- rast(r_n_tif)
+r_o <- rast(r_o_tif)
+names(r_n)
+setdiff(names(r_n), names(r_o))
+intersect(names(r_n), names(r_o))
+
+
+stopifnot(all(
+  sum(duplicated(names(r_n))) == 0,
+  sum(duplicated(names(r_o))) == 0))
+
+r <- c(
+  r_o,
+  r_n |> 
+    subset(
+      setdiff(
+        names(r_n),
+        names(r_o))))
+ext(r_o)
+ext(r_n)
+
+r_n_c <- crop(r_n, r_o)
+ext(r_n_c)
+r <- c(r_o, r_n_c)
+
+bb_o = ext(c(
+  xmin = -83.0,  xmax = -82.3, 
+  ymin =  27.2,  ymax =  28.5)) |> 
+  vect() |> st_as_sf() |> st_set_crs("EPSG:4326")
+bb_n = ext(c(
+  xmin = -83.0 , xmax = -81.8, 
+  ymin =  27.25, ymax =  28.5)) |> 
+  vect() |> st_as_sf() |> st_set_crs("EPSG:4326")
+
+mapview::mapView(bb_o, , col.regions = "red") +
+  mapview::mapView(bb_n, col.regions = "blue")
+
+names(r_n)
+names(r) <- names(r) |> 
+  str_replace("analysed_sst", "CRW_SST")
+
+# r_tmp <- tempfile(fileext = ".tif")
+writeRaster(r, r_tmp)
+file.copy(r_tmp, r_tif, overwrite = T)
+unlink(r_tmp)
+```
+
 
 ```{r}
 #| label: get-sst
@@ -1518,13 +1586,23 @@ librarian::shelf(
   marinebon/extractr,
   here)
 
+sf_tb <- tbeptools::tbsegshed |> 
+  bind_rows(
+  tbeptools::tbshed |>
+    mutate(
+      long_name   = "Tampa Bay",
+      bay_segment = "TB") |> 
+    select(-Acres))
+
 ed_extract(
   ed        = ed_info("https://coastwatch.pfeg.noaa.gov/erddap/griddap/NOAA_DHW.html"),
   var       = "CRW_SST",
-  bbox      = c(xmin = -83.0, ymin = 27.2, xmax = -82.3, ymax= 28.5),
-  aoi       = tbeptools::tbsegshed,
-  zonal_csv = here("data/sst/tbep_sst.csv"),
-  rast_tif  = here("data/sst/tbep_sst.tif"),
+  bbox_o      = c(xmin = -83.0, ymin = 27.2 , xmax = -82.3, ymax= 28.5),
+  bbox_n      = c(xmin = -83.0, ymin = 27.25, xmax = -81.8, ymax= 28.5),
+  sf_zones  = sf_tb,
+  fld_zones = "bay_segment",
+  zonal_csv = here("data/sst/tb_sst.csv"),
+  rast_tif  = here("data/sst/tb_sst.tif"),
   mask_tif = F)
 ```
 

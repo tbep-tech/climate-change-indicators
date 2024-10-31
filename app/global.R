@@ -62,8 +62,19 @@ prism_zones   <- d_prism_z |>
   deframe()
 
 # sst ----
+devtools::load_all("~/Github/marinebon/extractr")
+
 sst_tif   <- here("data/sst/tb_sst.tif")
 sst_csv   <- here("data/sst/tb_sst.csv")
+# sst_new_csv   <- here("data/sst/tb_sst_new.csv")
+
+sf_tb <- tbeptools::tbsegshed |>
+  bind_rows(
+    tbeptools::tbshed |>
+      mutate(
+        long_name   = "Tampa Bay",
+        bay_segment = "TB") |>
+      select(-Acres))
 
 r_sst     <- rast(sst_tif)
 d_sst_r   <- tibble(
@@ -74,8 +85,14 @@ d_sst_r   <- tibble(
 yrs_sst   <- range(year(d_sst_r$date))
 now_sst   <- max(d_sst_r$date)
 d_sst_z   <- read_csv(sst_csv) |>
+# d_sst_z_new   <- read_csv(sst_new_csv) |>
   mutate(
     date = as.Date(time))
+# d_sst_z_old <- d_sst_z
+# table(d_sst_z_old$bay_segment)
+#   BCB    HB   LTB    MR   MTB   OTB   TCB
+# 13169 13169 13169 13169 13169 13169 13169
+
 sst_zones <- d_sst_z |>
   distinct(long_name, bay_segment) |>
   deframe()

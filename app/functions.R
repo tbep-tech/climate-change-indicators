@@ -2,6 +2,7 @@ download_new <- function(
     url,
     file){
   # only download if url newer than local file
+  # url = h_url; file = h_nc
 
   resp <- curl::multi_download(
     urls          = url,
