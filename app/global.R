@@ -62,7 +62,7 @@ prism_zones   <- d_prism_z |>
   deframe()
 
 # sst ----
-devtools::load_all("~/Github/marinebon/extractr")
+# devtools::load_all("~/Github/marinebon/extractr")
 
 sst_tif   <- here("data/sst/tb_sst.tif")
 sst_csv   <- here("data/sst/tb_sst.csv")
@@ -74,7 +74,8 @@ sf_tb <- tbeptools::tbsegshed |>
       mutate(
         long_name   = "Tampa Bay",
         bay_segment = "TB") |>
-      select(-Acres))
+      select(-Acres)) |>
+  sf::st_make_valid()
 
 r_sst     <- rast(sst_tif)
 d_sst_r   <- tibble(
@@ -94,7 +95,7 @@ d_sst_z   <- read_csv(sst_csv) |>
 # 13169 13169 13169 13169 13169 13169 13169
 
 sst_zones <- d_sst_z |>
-  distinct(long_name, bay_segment) |>
+  distinct(bay_segment) |>
   deframe()
 
 # sealevel ----
@@ -302,7 +303,7 @@ d_rain <- d_prism_z |>
 d_sst <- d_sst_z |>
   filter(
     bay_segment == "OTB") |>
-  rename(value = val) |>
+  rename(value = mean) |>
   mutate(
     value = set_units(value, "degree_C"))
 
