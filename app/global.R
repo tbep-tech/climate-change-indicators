@@ -1,7 +1,14 @@
 # TODO:
-# - [ ] switch SST to https://coastwatch.pfeg.noaa.gov/erddap/griddap/NOAA_DHW.html
+# - [ ] Calculate collective min/max dates for Overview sld_date_split across data: prism, sst, slr, storms
+# - [ ] Overview bar plot, default: bar plot with error bars, zoomed into extent of min/max for exploded
+# - [ ] Overview bar plot, click to explode: add geom_sina point labels for min/max/avg years to plots, per [r - How to align position of geom\_sina point with geom\_text\_repel - Stack Overflow](https://stackoverflow.com/questions/69498840/how-to-align-position-of-geom-sina-point-with-geom-text-repel)
+# - [ ] add landing page and tour with cicero
+# - [ ] add month-day slider to other maps besides air temperature
 # - [ ] add prism_ytd processing and map
-# - [ ] add landing page, with value_box() and possibly sparklines
+# - [ ] debounce() for slider inputs, like sld_t_md
+# - [ ] try absolutePanel(draggable = T) for sliders (eg sld_t_md); try nesting wellPanel
+#       https://shiny.posit.co/r/layouts/panels-cards/
+#       https://github.com/rstudio/shiny-examples/blob/main/027-absolutely-positioned-panels/ui.R
 # - [ ] add avg (before 2 yrs ago) to plot_doy() colored blue
 # - [ ] make sld_{t}_tmp 2-values and process
 # - [ ] handle tmean w/ reactive; sel_t_var implement in map_prism_temp w/ avg
@@ -14,6 +21,8 @@
 # - [ ] migrate viz functions.R to tbeptools
 # - [ ] create static figures for reports (auto parameterize rendered)
 # - [ ] swiper maps: leaflet-proxy-map updates to layers so can zoom / pan without refresh
+# DONE:
+# - [x] switch SST to https://coastwatch.pfeg.noaa.gov/erddap/griddap/NOAA_DHW.html
 # - [x] move settings (gear icon) to right of card headers
 # - [x] convert prism units: ºC -> ºF, mm -> in
 # - [x] add sea level plot with linear fit and map for stations
@@ -29,6 +38,7 @@ librarian::shelf(
   lubridate, markdown, plotly, purrr, readr, scales, sf, shiny, slider,
   tbep-tech/tbeptools,
   StormR, terra, thematic, tibble, tidyr, units)
+set.seed(42)
 source(here("app/functions.R"))
 options(readr.show_col_types = F)
 
@@ -165,6 +175,30 @@ h_d <- tibble(
   scale    = getScale(h_st)   |> as.numeric())  # A tibble: 221 × 3
 # tail(h_d)
 
+# split_date <- Sys.Date() - years(1)
+# devtools::load_all(here::here("../tbeptools"))
+# y <- anlz_splitstorms(h_d, split_date)
+# y |>
+#   show_splitbarplot("period", "year", "sum")
+# table(y$year)
+# tail(y)
+#
+#
+# hurricanes <- data.frame(
+#   date_beg = as.Date(c(
+#     "1980-07-31", "1980-09-04", "1980-11-07",
+#     "1981-05-06", "1981-08-07", "1981-11-12")),
+#   scale = c(6, 1, 3, 1, 2, 1))
+# # Basic analysis with default statistics (sum, average and count)
+# split_date <- Sys.Date() - years(1)
+# anlz_splitstorms(hurricanes, split_date)
+#
+# # Analysis with custom statistics
+# anlz_splitstorms(hurricanes, split_date,
+#                      stats = list(
+#                        max = max,
+#                        min = min))
+
 # h_d$yday_beg
 
 h_d_sum <- h_d |>
@@ -217,37 +251,171 @@ stopifnot(length(setdiff(h_yrs[1]:h_yrs[2], h_d_sum$year)) == 0) # TODO: add mis
 # 10 WILMA     2005     6
 
 h_filt_yrs <- function(st, yrs){
+  # st = h_st; yrs = c(2000, 2024)
   st_yrs <- getSeasons(st) |> as.numeric()
   i_yrs <- st_yrs >= yrs[1] & st_yrs <= yrs[2]
   st@data <- st@data[i_yrs]
-  st
 }
 
 # plotStorms(h_filt_yrs(h_st, c(2005, 2005)), dynamicPlot = T)
 # plotStorms(h_st, dynamicPlot = T)
 
-h_yr_split <- 2000
-h_s <- h_d_sum |>
-  select(year, scale_sum) |>
-  mutate(
-    yr_grp = case_when(
-      year >= h_yr_split ~ glue(">= {h_yr_split}"),
-      TRUE              ~ glue("< {h_yr_split}")) |>
-      as.factor())
-h_g <- h_s |>
-  group_by(yr_grp) |>
-  summarise(
-    yr_min = min(year),
-    yr_max = max(year),
-    avg    = mean(scale_sum))
+# h_yr_split <- 2000
+# h_s <- h_d_sum |>
+#   select(year, scale_sum) |>
+#   mutate(
+#     yr_grp = case_when(
+#       year >= h_yr_split ~ glue(">= {h_yr_split}"),
+#       TRUE              ~ glue("< {h_yr_split}")) |>
+#       as.factor())
+# h_s <- tibble::tribble(
+#   ~year,  ~cat, grp,
+#   2000,    10,  "Then",
+#   2001,    12,  "Then",
+#   2002,    8,   "Then",
+#   2020,    14,   "Now",
+#   2021,    18,   "Now",
+#   2022,    15,   "Now")
 
-h_bar <- h_g |>
-  ggplot(aes(x = yr_grp, y = avg)) +
-  geom_col() +
-  ggplot2::labs(x = NULL, y = NULL) +
-  coord_cartesian(ylim = expand_range(h_g$avg, mul=0.1)) +
-  theme(
-    axis.text=element_text(size=12))
+# h_g <- h_s |>
+#   group_by(yr_grp) |>
+#   summarise(
+#     yr_min = min(year),
+#     yr_max = max(year),
+#     avg    = mean(scale_sum),
+#     sd     = sd(scale_sum))
+#
+# # h_bar: column plot with error bars ----
+# h_bar <- h_g |>
+#   ggplot(aes(x = yr_grp, y = avg)) +
+#   geom_col() +
+#   geom_errorbar(
+#     aes(ymin=avg-sd, ymax=avg+sd), width=.2, alpha=0.8) +
+#   ggplot2::labs(x = NULL, y = NULL) +
+#   coord_cartesian(ylim = range(h_s$scale_sum)) + # expand_range
+#   theme(
+#     axis.text=element_text(size=12))
+#
+# # h_v: violin plot with geom_sina points ---
+# h_v <- h_bar +
+#   # geom_violin(
+#   #   data = h_s,
+#   #   aes(x = yr_grp, y = scale_sum),
+#   #   fill = "gray80", linewidth = 1, alpha = .5) +
+#   geom_sina(
+#     data = h_s,
+#     aes(x = yr_grp, y = scale_sum),
+#     alpha = .25)
+#
+# h_p <- ggplot_build(h_v)$data[[3]] |>
+#   bind_cols(
+#     h_s |>
+#       # select(year, scale_sum, yr_grp) |>
+#       mutate(
+#         lbl = glue(
+#           "year: {year}
+#            sum(cat): {scale_sum}")))
+# # highlight points with most, least and closest to average,
+# #   subset to yr_grp
+# librarian::shelf(ggrepel)
+# dplyr::top_n(h_p, 3, scale_sum)
+#
+# devtools::load_all("~/Github/tbep-tech/tbeptools")
+# anlz_filter_extreme_and_mean_rows(sample_data, group, value)
+#
+#
+# h_p2 |> select(year, scale_sum, yr_grp, rn) |> View()
+#
+#   filter(dense_rank(scale_sum) %in% c(1, n(), which.min(abs(scale_sum - h_g$avg))) ) |>
+#   slice(n=1)
+#   slice(c(1, n(), which.min(abs(scale_sum - h_g$avg))) ) |>
+#   ggplot(aes(x = x, y = y, text = lbl)) +
+#   geom_point(size = 3, color = "red", shape = 22, fill = NA) +
+#   geom_label_repel(
+#     aes(label = lbl), color = "red",
+#     box.padding = 2, min.segment.length = 0.5, size=3)
+# h_p |>
+#   arrange(scale_sum) |>
+#   slice(c(1, n(), which.min(abs(scale_sum - h_g$avg))) ) |>
+#   ggplot(aes(x = x, y = y, text = lbl)) +
+#   geom_point(size = 3, color = "red", shape = 22, fill = NA) +
+#   geom_label_repel(
+#     aes(label = lbl), color = "red",
+#     box.padding = 2, min.segment.length = 0.5, size=3)
+#
+#
+# a + geom_point(data = a_guts, aes(x = x, y = y),
+#                size = 3, color = "red", shape = 22, fill = NA) +
+#   geom_label_repel(data = a_guts,
+#                    aes(x = x, y = y, label = county), color = "red",
+#                    box.padding = 2, min.segment.length = 0.5, size=3)
+#
+#
+#
+# h_pg <- suppressWarnings(
+#   h_bar +
+#   geom_point(
+#     data = h_p,
+#     aes(x = x, y = y, text = lbl)))
+# ggplotly(h_pg, tooltip = "text")
+#     # size = 3, color = "red", shape = 22, fill = NA) +
+#
+# suppressWarnings(
+#   h_bar +
+#     geom_point(
+#       data = h_p,
+#       aes(x = x, y = y, text = lbl))) |>
+#   ggplotly(tooltip = "text")
+#
+# h_v <- h_s |>
+#   ggplot(
+#     aes(
+#       x = yr_grp, y = scale_sum, text = year)) +
+#   # labs(x = "Season", y = "Ozone") +
+#   # scale_color_brewer(palette = "Dark2", guide = "none") +
+#   # geom_boxplot() +
+#   geom_violin(fill = "gray80", linewidth = 1, alpha = .5) +
+#   geom_sina(alpha = .25)
+# a <- ggplot(midwest, aes(state, area)) +
+#   geom_violin() +
+#   geom_sina()
+#
+# geom_violin(
+#   data = h_s,
+#   aes(x = yr_grp, y = scale_sum),
+#   fill = "gray80", linewidth = 1, alpha = .5) +
+#   geom_sina(
+#     data = h_s,
+#     aes(x = yr_grp, y = scale_sum, text = year),
+#     alpha = .25)
+#
+#
+# a_guts <- ggplot_build(a)$data[[2]] %>%
+#   bind_cols(midwest %>%
+#               mutate(state_num = as.integer(as.factor(state))) %>%
+#               select(state_num, area, county, poptotal)) %>%
+#   subset(poptotal>1E6)
+#
+#
+# set.seed(0)
+# a + geom_point(data = a_guts, aes(x = x, y = y),
+#                size = 3, color = "red", shape = 22, fill = NA) +
+#   geom_label_repel(data = a_guts,
+#                    aes(x = x, y = y, label = county), color = "red",
+#                    box.padding = 2, min.segment.length = 0.5, size=3)
+#
+#
+#
+# h_bar +
+#   # geom_violin(
+#   #   data = h_s,
+#   #   aes(x = yr_grp, y = scale_sum),
+#   #   fill = "gray80", linewidth = 1, alpha = .5) +
+#   geom_sina(
+#     data = h_s,
+#     aes(x = yr_grp, y = scale_sum, text = year),
+#     alpha = .25)
+
 
 # librarian::shelf("homerhanumat/bpexploder")
 # h_bar <- bpexploder(

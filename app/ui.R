@@ -7,6 +7,18 @@ page_navbar(
   nav_panel(
     title = tagList(
       "Overview", bs_icon("compass-fill")),
+
+    sliderInput(
+      "sld_date_split",
+      "Date to split comparison",
+      min        = as.Date("1980-01-01"),
+      value      = Sys.Date() - years(1),
+      max        = Sys.Date(),
+      timeFormat = "%F",
+      step       = 1,
+      animate    = T,
+      width      = "100%"),
+
     layout_column_wrap(
       width = "400px",
 

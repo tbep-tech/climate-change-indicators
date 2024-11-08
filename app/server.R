@@ -15,6 +15,11 @@ function(input, output, session) {
       value = input$sw_imperial)
   })
 
+  # rx_vals ----
+  # Reactive values to track which boxes are exploded
+  rx_exploded <- reactiveValues(
+    hurricanes = F, temperature = F)
+
   # Overview ----
 
   # * Air Temperature ----
@@ -140,9 +145,25 @@ function(input, output, session) {
 
   # * Hurricanes ----
 
+  # ·· rx_hurricanes ----
+  rx_hurricanes <- reactive({
+    d <- anlz_splitstorms(h_d, input$sld_date_split)
+
+    # calculate difference after - before for caption and value
+    attr(d, "diff") <- d |>
+      group_by(period) |>
+      summarize(
+        v = mean(sum)) |>
+      pull(v) |>
+      diff() |>
+      round(1)
+    d
+  })
+
   # ·· value_hurricanes ----
   output$value_hurricanes <- renderUI({
-    v <- diff(h_g$avg)
+    v <- attr(rx_hurricanes(), "diff")
+
     if (v > 0)
       v <- paste("+", v)
     paste(v, "cat")
@@ -150,20 +171,31 @@ function(input, output, session) {
 
   # ·· caption_hurricanes ----
   output$caption_hurricanes <- renderUI({
-    v <- diff(h_g$avg)
+    v <- attr(rx_hurricanes(), "diff")
+
     sign_v <- ifelse(v > 0, "increased", "decreased")
-    glue("The annual average sum of hurricane categories (cat) has {sign_v} by
-         {diff(h_g$avg)} since {h_yr_split}.")
+    glue(
+      "The annual average sum of hurricane categories (cat) has {sign_v} by {v}
+       since {format(input$sld_date_split, '%Y')} with years split around
+       {format(input$sld_date_split, '%b %e')}.")
   })
 
   # ·· bar_hurricanes ----
   output$bar_hurricanes <- renderPlotly({
-    ggplotly(h_bar)
+    rx_hurricanes() |>
+      show_splitbarplot(
+        "period", "year", "sum",
+        exploded       = rx_exploded$hurricanes,
+        source         = "H",
+        label_template = "{year}: {value}") |>
+      event_register("plotly_click") |>
+      layout(clickmode = "event")
   })
-  # output$bar_hurricanes <- renderBpexploder({
-  #   h_bar
-  # })
 
+  # Handle clicks for both plots to toggle exploding points
+  observeEvent(event_data("plotly_click", "H"), {
+    rx_exploded$hurricanes <- !rx_exploded$hurricanes
+  })
 
   # Air Temperature [t] ----
 
