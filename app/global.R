@@ -32,7 +32,7 @@
 #          https://rstudio.github.io/thematic/articles/auto.html
 
 # devtools::install_local(here::here("../tbeptools"), force = T)
-# devtools::load_all(here::here("../tbeptools"))
+devtools::load_all(here::here("../tbeptools"))
 librarian::shelf(
   bsicons, bslib, dplyr, glue, here, htmltools, leaflet, leaflet.extras2,
   lubridate, markdown, plotly, purrr, readr, scales, sf, shiny, slider,
@@ -255,6 +255,7 @@ h_filt_yrs <- function(st, yrs){
   st_yrs <- getSeasons(st) |> as.numeric()
   i_yrs <- st_yrs >= yrs[1] & st_yrs <= yrs[2]
   st@data <- st@data[i_yrs]
+  st
 }
 
 # plotStorms(h_filt_yrs(h_st, c(2005, 2005)), dynamicPlot = T)
