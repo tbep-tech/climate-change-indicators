@@ -260,7 +260,7 @@ h_filt_yrs <- function(st, yrs){
 # plotStorms(h_filt_yrs(h_st, c(2005, 2005)), dynamicPlot = T)
 # plotStorms(h_st, dynamicPlot = T)
 
-# h_yr_split <- 2000
+h_yr_split <- 2000
 # h_s <- h_d_sum |>
 #   select(year, scale_sum) |>
 #   mutate(
