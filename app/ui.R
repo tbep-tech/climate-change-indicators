@@ -6,7 +6,7 @@ page_navbar(
   # Overview [v] ----
   nav_panel(
     title = tagList(
-      "Overview", bs_icon("compass-fill")),
+      bs_icon("compass-fill"), "Overview"),
 
     sliderInput(
       "sld_date_split",
@@ -24,28 +24,28 @@ page_navbar(
 
       # * Air Temperature ----
       vb(
-        title    = span("Air Temperature", bs_icon("thermometer-half")),
+        title    = span(bs_icon("thermometer-half"), "Air Temperature"),
         value    = uiOutput("value_temp"),
         showcase = plotlyOutput("bar_temp"),
         uiOutput("caption_temp")),
 
       # * Rain ----
       vb(
-        title    = span("Rain", bs_icon("cloud-rain-fill")),
+        title    = span(bs_icon("cloud-rain-fill"), "Rain"),
         value    = uiOutput("value_rain"),
         showcase = plotlyOutput("bar_rain"),
         uiOutput("caption_rain")),
 
       # * Ocean Temperature ----
       vb(
-        title    = span("Ocean Temperature", bs_icon("thermometer-low")),
+        title    = span(bs_icon("thermometer-low"), "Ocean Temperature"),
         value    = uiOutput("value_sst"),
         showcase = plotlyOutput("bar_sst"),
         uiOutput("caption_sst")),
 
       # * Hurricanes ----
       vb(
-        title    = span("Hurricanes", bs_icon("tornado")),
+        title    = span(bs_icon("tornado"), "Hurricanes", ),
         value    = uiOutput("value_hurricanes"),
         showcase = plotlyOutput("bar_hurricanes"),
         uiOutput("caption_hurricanes"))
@@ -55,13 +55,13 @@ page_navbar(
   # Air Temperature [t] ----
   nav_panel(
     title = tagList(
-      "Air Temperature", bs_icon("thermometer-half")),
+      bs_icon("thermometer-half"), "Air Temperature"),
     navset_card_underline(
 
     # * Map ----
     nav_panel(
-      tagList(
-        "Map ", bs_icon("map")),
+      span(
+        bs_icon("map"), " Map"),
       card(
         full_screen = T,
         card_header(
@@ -121,8 +121,8 @@ page_navbar(
 
     # * Plot ----
     nav_panel(
-      tagList(
-        "Plot ", bs_icon("graph-up-arrow")),
+      span(
+        bs_icon("graph-up-arrow"), " Plot"),
       card(
         full_screen = T,
         card_header(
@@ -153,14 +153,14 @@ page_navbar(
 
   # Rain [r] ----
   nav_panel(
-    title = tagList(
-      "Rain", bs_icon("cloud-rain-fill")),
+    title = span(
+      bs_icon("cloud-rain-fill"), " Rain"),
     navset_card_underline(
 
       # * Map ----
       nav_panel(
-        tagList(
-          "Map ", bs_icon("map")),
+        span(
+          bs_icon("map"), " Map"),
 
         card(
           full_screen = T,
@@ -213,8 +213,7 @@ page_navbar(
 
       # * Plot ----
       nav_panel(
-        tagList(
-          "Plot ", bs_icon("graph-up-arrow")),
+        span(bs_icon("graph-up-arrow"), " Plot"),
         card(
           full_screen = T,
           card_header(
@@ -245,15 +244,13 @@ page_navbar(
 
   # Sea Level [l] ----
   nav_panel(
-    title = tagList(
-      "Sea Level", bs_icon("water")),
+    title = span(bs_icon("water"), " Sea Level"),
 
       # * map ----
         card(
           full_screen = T,
           card_header(
-            tagList(
-              "Map of sea level stations ", bs_icon("map") ) ),
+            span( bs_icon("map"), " Map of sea level stations") ),
           # TODO: helpText("Click on a different station to see the data."),
           leafletOutput("map_sl") ),
 
@@ -261,24 +258,40 @@ page_navbar(
         card(
           full_screen = T,
           card_header(
-            tagList(
-              "Plot of sea levels ", bs_icon("graph-up-arrow") ) ),
+            class = "d-flex",       # r-align gear icon
+            span(
+              bs_icon("graph-up-arrow"), " Plot of sea levels",
+              class = "me-auto"),   # r-align gear icon
+              popover(
+                title = "Settings",
+                bs_icon("gear"),
+
+                sliderInput(
+                  "sld_l_yr_split",
+                  "Year Split",
+                  min     = sl_yr_rng[1],
+                  value   = sl_yr_default,
+                  max     = max(sl_yr_rng),
+                  step    = 1,
+                  animate = TRUE,
+                  sep     = "") ) ),
+
           selectInput(
             "sel_l_stn",
             "Sea level station",
-            sl_stations),
+            sl_stations,
+            sl_station_default),
           plotlyOutput("plot_sl") ) ),
 
   # Ocean Temperature [o] ----
   nav_panel(
     title = tagList(
-      "Ocean Temperature", bs_icon("thermometer-low")),
+      bs_icon("thermometer-low"), " Ocean Temperature"),
     navset_card_underline(
 
       # * Map ----
       nav_panel(
-        tagList(
-          "Map ", bs_icon("map")),
+        span(bs_icon("map"), " Map"),
         card(
           full_screen = T,
           card_header(
@@ -332,7 +345,7 @@ page_navbar(
       # * Plot ----
       nav_panel(
         tagList(
-          "Plot ", bs_icon("graph-up-arrow")),
+          bs_icon("graph-up-arrow"), " Plot"),
         card(
           full_screen = T,
           card_header(
@@ -364,15 +377,14 @@ page_navbar(
 
   # Hurricanes [h] ----
   nav_panel(
-    title = tagList(
-      "Hurricanes", bs_icon("tornado")),
+    title = span(bs_icon("tornado"), " Hurricanes"),
 
     # * map ----
     card(
       full_screen = T,
       card_header(
         tagList(
-          "Map of hurricane tracks", bs_icon("map") ) ),
+          bs_icon("map"), " Map of hurricane tracks") ),
       # TODO: configure option to limit map of hurricane tracks by year
       leafletOutput("map_h"),
 
@@ -401,7 +413,7 @@ page_navbar(
       card_header(
         class = "d-flex",       # r-align gear icon
         span(
-          "Plot of hurricanes over time", bs_icon("graph-up-arrow"),
+          bs_icon("graph-up-arrow"), " Plot of hurricanes over time",
           class = "me-auto"),   # r-align gear icon
         popover(
           title     = "Settings",

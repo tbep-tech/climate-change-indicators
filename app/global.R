@@ -115,6 +115,14 @@ sl_stations <- d_sl |>
   distinct(station_name, station_id) |>
   deframe()
 
+sl_station_default <- sl_stations["St. Petersburg"]
+
+sl_yr_rng <- d_sl |>
+  filter(station_id == sl_station_default) |>
+  select(year) |>
+  range()
+sl_yr_default <- 2000
+
 # map bounding box ----
 b <- st_bbox(tbsegshed) |> as.numeric()
 

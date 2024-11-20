@@ -422,14 +422,80 @@ function(input, output, session) {
   # * plot_sl ----
   output$plot_sl <- renderPlotly({
 
-    # input$map_sl$click
-    # TODO: update input$sel_l_stn based on map stn click
-    #       update map highlighted marker based on ∆ input$sel_l_stn
+    # Split data by year and calculate trends
+    d <- d_sl |>
+      filter(station_id == input$sel_l_stn) |>
+      mutate(
+        yr_grp = case_when(
+          year > input$sld_l_yr_split  ~ "Now",
+          TRUE                         ~ "Then"))
 
-    # input <- list(sel_l_stn = 8726724)
+    # Calculate trends and stats for each period
+    trends <- d |>
+      group_by(yr_grp) |>
+      group_modify(~ {
+        m <- lm(msl ~ date, data = .)
+        rsq <- summary(m)$r.squared
+        cm_per_decade <- coef(m)[["date"]] * 100 * 365 * 10  # convert to cm/decade
+        
+        # Convert units if imperial
+        rate <- if (input$sw_imperial) {
+          cm_per_decade / 2.54  # convert to inches/decade
+        } else {
+          cm_per_decade
+        }
+        
+        unit <- if (input$sw_imperial) "in/decade" else "cm/decade"
+        
+        # Create annotation text
+        text <- sprintf(
+          "%s: %0.2f %s\n(R² = %0.2f)",
+          .$yr_grp[1], rate, unit, rsq)
+        
+        tibble(
+          date = range(.$date),
+          msl = predict(m, newdata = data.frame(date = range(.$date))),
+          text = text[1],
+          rate = rate,
+          rsq = rsq)
+      })
 
-    plot_sl(input$sel_l_stn)
+    # Convert y-axis values if imperial
+    if (input$sw_imperial) {
+      d <- d |> mutate(msl = msl / 2.54)
+      trends <- trends |> mutate(msl = msl / 2.54)
+    }
 
+    # Create plot
+    p <- d |>
+      ggplot(aes(date, msl, color = yr_grp)) +
+      geom_point(alpha = 0.3) +
+      geom_line(data = trends, size = 1) +
+      scale_color_manual(
+        values = c("Then" = "gray50", "Now" = "red"),
+        name = "Period") +
+      labs(
+        x = "Year",
+        y = if (input$sw_imperial) "Mean Sea Level (inches)" else "Mean Sea Level (cm)",
+        title = glue("Sea Level Rise at {sl_stations[input$sel_l_stn]}"))
+
+    # Add annotations
+    annotations <- trends |>
+      group_by(yr_grp) |>
+      slice_tail() |>
+      mutate(
+        x = date,
+        y = msl,
+        text = text,
+        showarrow = TRUE,
+        arrowhead = 2,
+        ax = 40,
+        ay = if (yr_grp == "Then") 40 else -40)
+
+    p <- ggplotly(p) |>
+      layout(annotations = annotations)
+
+    p
   })
 
   # Ocean Temperature [o] ----
