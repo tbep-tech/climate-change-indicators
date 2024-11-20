@@ -175,15 +175,6 @@ page_navbar(
               bs_icon("gear"),
 
               sliderInput(
-                "sld_r_md",
-                "Month and day of year",
-                min        = as.Date(glue("{year(now_prism)}-01-01")),
-                value      = now_prism,
-                max        = as.Date(glue("{year(now_prism)}-12-31")),
-                timeFormat = "%b %d",
-                animate    = T),
-
-              sliderInput(
                 "sld_r_yrs_then",
                 "Year(s), Then",
                 min     = yrs_prism[1],
@@ -203,7 +194,22 @@ page_navbar(
                 animate = T,
                 sep     = "")) ),
 
-          leafletOutput("map_rain") ) ),
+          leafletOutput("map_rain"),
+
+          absolutePanel(
+            id        = "pnl_r_md",
+            bottom    = "5%", left = "5%", right = "5%",
+            width     = "90%",
+
+            sliderInput(
+              "sld_r_md",
+              "Month and day of year",
+              min        = as.Date(glue("{year(now_prism)}-01-01")),
+              value      = now_prism,
+              max        = as.Date(glue("{year(now_prism)}-12-31")),
+              timeFormat = "%b %d",
+              animate    = T,
+              width     = "100%") ) ) ),
 
       # * Plot ----
       nav_panel(
@@ -287,15 +293,6 @@ page_navbar(
               bs_icon("gear"),
 
               sliderInput(
-                "sld_o_md",
-                "Month and day of year",
-                min        = as.Date(glue("{year(now_prism)}-01-01")),
-                value      = now_prism,
-                max        = as.Date(glue("{year(now_prism)}-12-31")),
-                timeFormat = "%b %d",
-                animate    = T),
-
-              sliderInput(
                 "sld_o_yrs_then",
                 "Year(s), Then",
                 min     = yrs_prism[1],
@@ -315,7 +312,22 @@ page_navbar(
                 animate = T,
                 sep     = "")) ),
 
-          leafletOutput("map_sst") ) ),
+          leafletOutput("map_sst"),
+
+          absolutePanel(
+            id        = "pnl_o_md",
+            bottom    = "5%", left = "5%", right = "5%",
+            width     = "90%",
+
+            sliderInput(
+              "sld_o_md",
+              "Month and day of year",
+              min        = as.Date(glue("{year(now_prism)}-01-01")),
+              value      = now_prism,
+              max        = as.Date(glue("{year(now_prism)}-12-31")),
+              timeFormat = "%b %d",
+              animate    = T,
+              width     = "100%") ) ) ),
 
       # * Plot ----
       nav_panel(
