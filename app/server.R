@@ -18,7 +18,10 @@ function(input, output, session) {
   # rx_vals ----
   # Reactive values to track which boxes are exploded
   rx_exploded <- reactiveValues(
-    hurricanes = F, temperature = F)
+    hurricanes  = F,
+    temperature = F,
+    rain        = F,
+    sst         = F)
 
   # Overview ----
 
@@ -26,121 +29,198 @@ function(input, output, session) {
 
   # ·· rx_temp ----
   rx_temp <- reactive({
-    suppressWarnings({
-      plot_hist(
-        d_temp,
-        value_units = ifelse(
-          input$sw_imperial,
-          "ºF",
-          "ºC"))
-    })
+    # varies with input$sw_imperial, input$sld_date_split
+
+    # DEBUG: input <- list(sw_imperial=T, sld_date_split=as.Date("2023-11-20"))
+    show_isImperial <- input$sw_imperial
+    show_units      <- ifelse(show_isImperial, "°F", "°C")
+
+    d <- anlz_splitdata(
+      d_temp,
+      input$sld_date_split,
+      date_col  = "date",
+      value_col = "value") |>
+      mutate(
+        avg = set_units(avg, show_units, mode = "standard"))
+
+    # calculate difference after - before for caption and value
+    v <- d |>
+      group_by(period) |>
+      summarize(
+        v = mean(avg)) |>
+      pull(v) |>
+      diff() |>
+      round(1) |>
+      drop_units()
+
+    attr(d, "value") <- glue("{ifelse(v > 0, '+','')} {v} {show_units}")
+
+    attr(d, "caption") <- glue(
+      "The annual average temperature has
+       {ifelse(v > 0, 'increased', 'decreased')} by {abs(v)} {show_units}
+       since {format(input$sld_date_split, '%Y')} with years split around
+       {format(input$sld_date_split, '%b %e')}.")
+
+    d
   })
 
   # ·· value_temp ----
   output$value_temp <- renderUI({
-    # browser() # DEBUG
-    rx_temp() |>
-      attr("value")
+    attr(rx_temp(), "value")
   })
 
   # ·· caption_temp ----
   output$caption_temp <- renderUI({
-    rx_temp() |>
-      attr("caption")
+    attr(rx_temp(), "caption")
   })
 
-  # ·· hist_temp ----
-  output$hist_temp <- renderPlotly({
-    suppressWarnings({
-      plot_hist(
-        d_temp,
-        value_units = ifelse(
-          input$sw_imperial,
-          "ºF",
-          "ºC"))
-    })
+  # ·· bar_temp ----
+  output$bar_temp <- renderPlotly({
+    rx_temp() |>
+      show_splitbarplot(
+        "period", "year", "avg",
+        exploded       = rx_exploded$temperature,
+        source         = "T",
+        label_template = "{year}: {value}") |>
+      event_register("plotly_click") |>
+      layout(clickmode = "event")
+  })
+
+  # ·· click_temp ----
+  observeEvent(event_data("plotly_click", "T"), {
+    rx_exploded$temperature <- !rx_exploded$temperature
   })
 
   # * Rain ----
 
   # ·· rx_rain ----
   rx_rain <- reactive({
-    suppressWarnings({
-      plot_hist(
-        d_rain,
-        value_units   = ifelse(
-          input$sw_imperial,
-          "in",
-          "mm"),
-        value_glue    = "{sign_symbol} {round(abs(avg_diff), 1)} {value_units}",
-        sign_positive = "wetter",
-        sign_negative = "drier",
-        caption_glue  = "
-      The rainfall this year up to {dates_now} is {round(abs(avg_diff),2)} {value_units} {sign} than the
-      previously recorded average year to date rainfall during the years {years_then_text}.")
-    })
+    # varies with input$sw_imperial, input$sld_date_split
+
+    # DEBUG: input <- list(sw_imperial=T, sld_date_split=as.Date("2023-11-20"))
+    show_isImperial <- input$sw_imperial
+    show_units      <- ifelse(show_isImperial, "in", "mm")
+
+    d <- anlz_splitdata(
+      d_rain,
+      input$sld_date_split,
+      date_col  = "date",
+      value_col = "value") |>
+      mutate(
+        avg = set_units(avg, show_units, mode = "standard"))
+
+    # calculate difference after - before for caption and value
+    v <- d |>
+      group_by(period) |>
+      summarize(
+        v = mean(avg)) |>
+      pull(v) |>
+      diff() |>
+      round(1) |>
+      drop_units()
+
+    attr(d, "value") <- glue("{ifelse(v > 0, '+','')} {v} {show_units}")
+
+    attr(d, "caption") <- glue(
+      "The annual average rainfall has been
+       {ifelse(v > 0, 'wetter', 'drier')} by {abs(v)} {show_units}
+       since {format(input$sld_date_split, '%Y')} with years split around
+       {format(input$sld_date_split, '%b %e')}.")
+
+    d
   })
 
   # ·· value_rain ----
   output$value_rain <- renderUI({
-    rx_rain() |>
-      attr("value")
+    attr(rx_rain(), "value")
   })
 
   # ·· caption_rain ----
   output$caption_rain <- renderUI({
-    rx_rain() |>
-      attr("caption")
+    attr(rx_rain(), "caption")
   })
 
-  # ·· hist_rain ----
-  output$hist_rain <- renderPlotly({
-    suppressWarnings({
-      plot_hist(
-        d_rain,
-        value_units   = ifelse(
-          input$sw_imperial,
-          "in",
-          "mm"))
-    })
+  # ·· bar_rain ----
+  output$bar_rain <- renderPlotly({
+    rx_rain() |>
+      show_splitbarplot(
+        "period", "year", "avg",
+        exploded       = rx_exploded$rain,
+        source         = "R",
+        label_template = "{year}: {value}") |>
+      event_register("plotly_click") |>
+      layout(clickmode = "event")
+  })
+
+  # ·· click_rain ----
+  observeEvent(event_data("plotly_click", "R"), {
+    rx_exploded$rain <- !rx_exploded$rain
   })
 
   # * Ocean Temperature ----
 
   # ·· rx_sst ----
   rx_sst <- reactive({
-    suppressWarnings({
-      plot_hist(
-        d_sst,
-        value_units = ifelse(
-          input$sw_imperial,
-          "ºF",
-          "ºC"))
-    })
+    # varies with input$sw_imperial, input$sld_date_split
+
+    # DEBUG: input <- list(sw_imperial=T, sld_date_split=as.Date("2023-11-20"))
+    show_isImperial <- input$sw_imperial
+    show_units      <- ifelse(show_isImperial, "°F", "°C")
+
+    d <- anlz_splitdata(
+      d_sst,
+      input$sld_date_split,
+      date_col  = "date",
+      value_col = "value") |>
+      mutate(
+        avg = set_units(avg, show_units, mode = "standard"))
+
+    # calculate difference after - before for caption and value
+    v <- d |>
+      group_by(period) |>
+      summarize(
+        v = mean(avg)) |>
+      pull(v) |>
+      diff() |>
+      round(1) |>
+      drop_units()
+
+    attr(d, "value") <- glue("{ifelse(v > 0, '+','')} {v} {show_units}")
+
+    attr(d, "caption") <- glue(
+      "The annual average ocean temperature has
+       {ifelse(v > 0, 'increased', 'decreased')} by {abs(v)} {show_units}
+       since {format(input$sld_date_split, '%Y')} with years split around
+       {format(input$sld_date_split, '%b %e')}.")
+
+    d
   })
 
   # ·· value_sst ----
   output$value_sst <- renderUI({
-    rx_sst() |>
-      attr("value")
+    attr(rx_sst(), "value")
   })
 
   # ·· caption_sst ----
   output$caption_sst <- renderUI({
-    rx_sst() |>
-      attr("caption")
+    attr(rx_sst(), "caption")
   })
 
-  # ·· hist_sst ----
-  output$hist_sst <- renderPlotly({
-    suppressWarnings({
-      plot_hist(
-        d_sst,
-        value_units = ifelse(
-          input$sw_imperial,
-          "ºF",
-          "ºC"))
-    })
+  # ·· bar_sst ----
+  output$bar_sst <- renderPlotly({
+    rx_sst() |>
+      show_splitbarplot(
+        "period", "year", "avg",
+        exploded       = rx_exploded$sst,
+        source         = "S",
+        label_template = "{year}: {value}") |>
+      event_register("plotly_click") |>
+      layout(clickmode = "event")
+  })
+
+  # ·· click_sst ----
+  observeEvent(event_data("plotly_click", "S"), {
+    rx_exploded$sst <- !rx_exploded$sst
   })
 
   # * Hurricanes ----
@@ -150,34 +230,33 @@ function(input, output, session) {
     d <- anlz_splitstorms(h_d, input$sld_date_split)
 
     # calculate difference after - before for caption and value
-    attr(d, "diff") <- d |>
+    v <- d |>
       group_by(period) |>
       summarize(
         v = mean(sum)) |>
       pull(v) |>
       diff() |>
       round(1)
+
+    attr(d, "value") <- glue("{ifelse(v > 0, '+','')} {v} cat")
+
+    attr(d, "caption") <- glue(
+      "The annual average sum of hurricane categories (cat) has
+      {ifelse(v > 0, 'increased','decreased')} by {v}
+       since {format(input$sld_date_split, '%Y')} with years split around
+       {format(input$sld_date_split, '%b %e')}.")
+
     d
   })
 
   # ·· value_hurricanes ----
   output$value_hurricanes <- renderUI({
-    v <- attr(rx_hurricanes(), "diff")
-
-    if (v > 0)
-      v <- paste("+", v)
-    paste(v, "cat")
+    attr(rx_hurricanes(), "value")
   })
 
   # ·· caption_hurricanes ----
   output$caption_hurricanes <- renderUI({
-    v <- attr(rx_hurricanes(), "diff")
-
-    sign_v <- ifelse(v > 0, "increased", "decreased")
-    glue(
-      "The annual average sum of hurricane categories (cat) has {sign_v} by {v}
-       since {format(input$sld_date_split, '%Y')} with years split around
-       {format(input$sld_date_split, '%b %e')}.")
+    attr(rx_hurricanes(), "caption")
   })
 
   # ·· bar_hurricanes ----
@@ -192,7 +271,7 @@ function(input, output, session) {
       layout(clickmode = "event")
   })
 
-  # Handle clicks for both plots to toggle exploding points
+  # ·· click_hurricanes ----
   observeEvent(event_data("plotly_click", "H"), {
     rx_exploded$hurricanes <- !rx_exploded$hurricanes
   })
@@ -342,6 +421,7 @@ function(input, output, session) {
 
   # * plot_sl ----
   output$plot_sl <- renderPlotly({
+
     # input$map_sl$click
     # TODO: update input$sel_l_stn based on map stn click
     #       update map highlighted marker based on ∆ input$sel_l_stn

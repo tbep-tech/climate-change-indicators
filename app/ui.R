@@ -25,27 +25,30 @@ page_navbar(
       # * Air Temperature ----
       vb(
         title    = span("Air Temperature", bs_icon("thermometer-half")),
-        value    = uiOutput("value_temp"), p(uiOutput("caption_temp")),
-        showcase = plotlyOutput("hist_temp")),
+        value    = uiOutput("value_temp"),
+        showcase = plotlyOutput("bar_temp"),
+        uiOutput("caption_temp")),
 
       # * Rain ----
       vb(
         title    = span("Rain", bs_icon("cloud-rain-fill")),
-        value    = uiOutput("value_rain"), p(uiOutput("caption_rain")),
-        showcase = plotlyOutput("hist_rain")),
+        value    = uiOutput("value_rain"),
+        showcase = plotlyOutput("bar_rain"),
+        uiOutput("caption_rain")),
 
       # * Ocean Temperature ----
       vb(
         title    = span("Ocean Temperature", bs_icon("thermometer-low")),
-        value    = uiOutput("value_sst"), p(uiOutput("caption_sst")),
-        showcase = plotlyOutput("hist_sst")),
+        value    = uiOutput("value_sst"),
+        showcase = plotlyOutput("bar_sst"),
+        uiOutput("caption_sst")),
 
       # * Hurricanes ----
       vb(
         title    = span("Hurricanes", bs_icon("tornado")),
-        value    = uiOutput("value_hurricanes"), p(uiOutput("caption_hurricanes")),
-        showcase = plotlyOutput("bar_hurricanes"))
-        # showcase = bpexploderOutput("bar_hurricanes", height = "auto"))
+        value    = uiOutput("value_hurricanes"),
+        showcase = plotlyOutput("bar_hurricanes"),
+        uiOutput("caption_hurricanes"))
 
     )),
 

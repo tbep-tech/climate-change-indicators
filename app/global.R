@@ -1,4 +1,5 @@
 # TODO:
+# - [ ] seperate updates (eg hurricanes.nc) from running shiny app into crontab
 # - [ ] Calculate collective min/max dates for Overview sld_date_split across data: prism, sst, slr, storms
 # - [ ] Overview bar plot, default: bar plot with error bars, zoomed into extent of min/max for exploded
 # - [ ] Overview bar plot, click to explode: add geom_sina point labels for min/max/avg years to plots, per [r - How to align position of geom\_sina point with geom\_text\_repel - Stack Overflow](https://stackoverflow.com/questions/69498840/how-to-align-position-of-geom-sina-point-with-geom-text-repel)
@@ -32,7 +33,7 @@
 #          https://rstudio.github.io/thematic/articles/auto.html
 
 # devtools::install_local(here::here("../tbeptools"), force = T)
-devtools::load_all(here::here("../tbeptools"))
+# devtools::load_all(here::here("../tbeptools"))
 librarian::shelf(
   bsicons, bslib, dplyr, glue, here, htmltools, leaflet, leaflet.extras2,
   lubridate, markdown, plotly, purrr, readr, scales, sf, shiny, slider,
@@ -130,7 +131,8 @@ h_url <- "https://www.ncei.noaa.gov/data/international-best-track-archive-for-cl
 h_nc  <- here(glue("data/storms/{basename(h_url)}"))
 
 # download if online newer than local
-download_new(h_url, h_nc)
+#download_new(h_url, h_nc)
+# TODO: move download_new() to crontab
 
 h_sds <- defStormsDataset(h_nc, basin = "NA", verbose = 0) # NA: North Atlantic basin
 # str(h_sds)
