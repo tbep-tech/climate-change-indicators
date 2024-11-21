@@ -35,7 +35,7 @@ COPY --chown=shiny:shiny .env* /share/github/tbep-tech/climate-change-indicators
 USER shiny
 
 # Add cron job for data updates
-RUN echo "0 0 * * * /usr/bin/Rscript /share/github/tbep-tech/climate-change-indicators/server/update_data.R >> /var/log/climate_data_update.log 2>&1" | crontab -
+RUN echo "0 0 * * * /usr/bin/Rscript /share/github/tbep-tech/climate-change-indicators/server/update_data.R >> /share/log/climate_data_update.log 2>&1" | crontab -
 
 EXPOSE 3838
 
