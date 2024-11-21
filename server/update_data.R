@@ -7,12 +7,14 @@ log_message <- function(msg) {
   cat(message, "\n") # Also print to console
 }
 
+# Load packages ----
 log_message("Loading packages...")
 librarian::shelf(
   curl, dplyr, marinebon/extractr, gert, glue, here, lubridate, sf,
   tbeptech/tbeptools,
   quiet = TRUE)
 
+# Setup variables ----
 log_message("Setting up variables...")
 tb_zones <- tbeptools::tbsegshed |>
   bind_rows(

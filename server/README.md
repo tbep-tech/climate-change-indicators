@@ -38,17 +38,14 @@ This setup allows you to: - Modify the app files locally and see changes immedia
 
 The container requires certain environment variables for Git authentication and operations. Create a `.env` file in the server directory with the following variables:
 
-```bash
+``` bash
 # Git Authentication
 GITHUB_PAT=your_github_personal_access_token
 GIT_USER=your_git_username
 GIT_EMAIL=your_email@example.com
 ```
 
-To create a GitHub Personal Access Token:
-1. Go to GitHub Settings > Developer settings > Personal access tokens
-2. Generate a new token with 'repo' scope
-3. Copy the token and add it to your `.env` file
+To create a GitHub Personal Access Token: 1. Go to GitHub Settings \> Developer settings \> Personal access tokens 2. Generate a new token with 'repo' scope 3. Copy the token and add it to your `.env` file
 
 Note: The `.env` file is included in `.gitignore` to prevent exposing sensitive information.
 
