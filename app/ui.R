@@ -45,10 +45,17 @@ page_navbar(
 
       # * Hurricanes ----
       vb(
-        title    = span(bs_icon("tornado"), "Hurricanes", ),
+        title    = span(bs_icon("tornado"), "Hurricanes"),
         value    = uiOutput("value_hurricanes"),
         showcase = plotlyOutput("bar_hurricanes"),
-        uiOutput("caption_hurricanes"))
+        uiOutput("caption_hurricanes")),
+
+      # * Sea Level ----
+      vb(
+        title    = span(bs_icon("water"), "Sea Level"),
+        value    = uiOutput("value_sl"),
+        showcase = plotlyOutput("bar_sl"),
+        uiOutput("caption_sl"))
 
     )),
 

@@ -138,10 +138,6 @@ ctr <- tbeptools::tbshed |>
 h_url <- "https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r01/access/netcdf/IBTrACS.NA.v04r01.nc"
 h_nc  <- here(glue("data/storms/{basename(h_url)}"))
 
-# download if online newer than local
-#download_new(h_url, h_nc)
-# TODO: move download_new() to crontab
-
 h_sds <- defStormsDataset(h_nc, basin = "NA", verbose = 0) # NA: North Atlantic basin
 # str(h_sds)
 # length(unique(paste(h_sds@database$names, h_sds@database$seasons, " "))) # 622
