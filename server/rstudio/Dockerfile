@@ -19,23 +19,23 @@ RUN installGithub.r marinebon/extractr
 RUN R -e "remotes::install_github('tbep-tech/tbeptools@climate-change-indicators')"
 
 # Create required directories with appropriate permissions
-RUN mkdir -p /srv/shiny-server/app/data \
-    /srv/scripts \
+RUN mkdir -p /share/github/tbep-tech/climate-change-indicators/data \
+    /share/github/tbep-tech/climate-change-indicators/server \
     /var/log \
-    && chown -R shiny:shiny /srv/shiny-server \
+    && chown -R shiny:shiny /share \
     && chown -R shiny:shiny /var/log
 
 # Set working directory
-WORKDIR /srv/shiny-server
+WORKDIR /share/github/tbep-tech/climate-change-indicators
 
 # Copy environment variables if .env exists
-COPY --chown=shiny:shiny .env* /srv/shiny-server/.env*
+COPY --chown=shiny:shiny .env* /share/github/tbep-tech/climate-change-indicators/.env*
 
 # Switch to shiny user
 USER shiny
 
 # Add cron job for data updates
-RUN echo "0 0 * * * /usr/bin/Rscript /srv/scripts/update_data.R >> /var/log/climate_data_update.log 2>&1" | crontab -
+RUN echo "0 0 * * * /usr/bin/Rscript /share/github/tbep-tech/climate-change-indicators/server/update_data.R >> /var/log/climate_data_update.log 2>&1" | crontab -
 
 EXPOSE 3838
 
