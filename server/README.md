@@ -11,7 +11,9 @@ This directory contains the Docker configuration for running the Climate Change 
 From the root of the climate-change-indicators repository:
 
 ``` bash
-docker build -t climate-indicators ./server
+cd server
+docker pull --platform linux/x86_64 rocker/geospatial # for Mac
+docker build -t climate-indicators .
 ```
 
 ## Running the Container

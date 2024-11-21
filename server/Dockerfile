@@ -1,4 +1,4 @@
-FROM rocker/shiny-verse:latest
+FROM rocker/geospatial:latest
 
 # Install shiny server
 RUN /rocker_scripts/install_shiny_server.sh
