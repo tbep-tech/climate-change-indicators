@@ -29,7 +29,7 @@ tb_zones <- tbeptools::tbsegshed |>
 update_sea_level <- function() {
   sl_csv <- here("data/slr/monthly_sea_levels.csv")
 
-  read_importsealevels(sl_csv)
+  tbeptools::read_importsealevels(sl_csv)
 }
 
 update_sst <- function() {
@@ -64,7 +64,7 @@ update_hurricane <- function() {
 }
 
 update_prism <- function() {
-  d <- read_importprism(
+  d <- tbeptools::read_importprism(
     vars      = c("tmin", "tmax", "tdmean", "ppt"),
     vars_ytd  = c("ppt"),
     date_beg  = as.Date("1981-01-01"),
@@ -116,11 +116,11 @@ main <- function() {
   # Run each function with error handling
   lapply(names(update_fns), function(fn_name) {
     tryCatch({
-      log_message(glue::glue("Starting {fn_name} step..."))
+      log_message(glue("Starting {fn_name} step..."))
       update_fns[[fn_name]]()
-      log_message(glue::glue("Successfully completed {fn_name} step"))
+      log_message(glue("Successfully completed {fn_name} step"))
     }, error = function(e) {
-      log_message(glue::glue("Error in {fn_name} step: {conditionMessage(e)}"))
+      log_message(glue("Error in {fn_name} step: {conditionMessage(e)}"))
     })
   })
 
