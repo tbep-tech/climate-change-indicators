@@ -12,9 +12,6 @@ This directory contains the Docker configuration for running the Climate Change 
 The container requires certain environment variables for Git authentication and operations. Create a `.env` file in the server directory with the following variables:
 
 ``` bash
-# RStudio Authentication
-PASSWORD=your_rstudio_password
-
 # Git Authentication
 GITHUB_PAT=your_github_personal_access_token
 GIT_USER=your_git_username
