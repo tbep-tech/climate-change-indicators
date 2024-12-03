@@ -194,7 +194,8 @@ plot_doy <- function(
           k      = days_smooth,
           fill   = NA,
           align  = "center")) |>
-      ungroup()
+      ungroup() |>
+      filter(!is.na(val))
   }
 
   # get min, max per doy

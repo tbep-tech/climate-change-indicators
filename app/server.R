@@ -342,7 +342,7 @@ function(input, output, session) {
     attr(d, "value") <- glue("{ifelse(v > 0, '+','')} {v} {units}")
 
     attr(d, "caption") <- glue(
-      "Sea level rise (cat) has
+      "Sea level rise ({units}) has
       {ifelse(v > 0, 'increased','decreased')} by {v}
        since {format(input$sld_date_split, '%Y-%m-%d')} at {names(sl_station_default)}.")
 
