@@ -281,37 +281,77 @@ function(input, output, session) {
 
   # ·· rx_sl ----
   rx_sl <- reactive({
-    # Get trends data for the default station
-    d <- d_sl |>
-      filter(station_id == sl_station_default) |>
-      mutate(
-        yr_grp = case_when(
-          year > input$sld_l_yr_split ~ "after",
-          TRUE                        ~ "before"))
 
-    # Calculate trend for recent period
-    recent_data <- d |> filter(yr_grp == "after")
-    recent_model <- lm(msl ~ date, data = recent_data)
-    rate <- coef(recent_model)[["date"]] * 100 * 365 * 10  # convert to cm/decade
+    # Split data by date and default station
+    d <- d_sl |>
+      filter(
+        station_id == sl_station_default,
+        !is.na(msl)) |>
+      mutate(
+        date_grp = factor(
+          case_when(
+          date > input$sld_date_split ~ "after",
+          TRUE                        ~ "before"),
+          ordered = T,
+          levels = c("before", "after")))
+    # table(d$date_grp)
+    # after before
+    #    10    923
 
     # Convert to imperial if needed
-    unit <- ifelse(input$sw_imperial, "in/decade", "cm/decade")
-    if (input$sw_imperial) {
-      rate <- rate / 2.54
+    if (input$sw_imperial){
+      d$msl <- d$msl * 100 / 2.54  # m to in
+    } else {
+      d$msl <- d$msl * 100         # m to cm
     }
 
-    # Format the value
-    value <- sprintf("%0.1f %s", rate, unit)
+    units <- ifelse(input$sw_imperial, "in/decade", "cm/decade")
 
-    # Add attributes for caption
-    structure(
-      value,
-      caption = glue("Recent sea level rise rate at {sl_stations[sl_station_default]}"))
+    # Calculate trends and stats for each period
+    d <- d |>
+      group_by(date_grp) |>
+      group_modify(~ {
+
+        mdl  <- lm(msl ~ date, data = .)
+        rsq  <- summary(mdl)$r.squared
+        rate <- coef(mdl)[["date"]] * 365 * 10  # convert to [cm|in]/decade
+
+        # Create annotation text
+        text <- sprintf(
+          "%s: %0.2f %s\n(R² = %0.2f)",
+          .$date_grp[1], rate, units, rsq)
+
+        tibble(
+          date  = median(.$date),
+          msl   = predict(mdl, newdata = data.frame(date = median(.$date))),
+          rate  = rate,
+          units = units,
+          text  = text,
+          line  = list(tibble(
+            date = range(.$date),
+            msl  = predict(mdl, newdata = data.frame(date = range(.$date))) )) )
+      }, .keep = T)
+
+    # calculate difference after - before for caption and value
+    v <- d |>
+      arrange(date_grp) |>
+      pull(rate) |>
+      diff() |>
+      round(1)
+
+    attr(d, "value") <- glue("{ifelse(v > 0, '+','')} {v} {units}")
+
+    attr(d, "caption") <- glue(
+      "Sea level rise (cat) has
+      {ifelse(v > 0, 'increased','decreased')} by {v}
+       since {format(input$sld_date_split, '%Y-%m-%d')} at {names(sl_station_default)}.")
+
+    d
   })
 
   # ·· value_sl ----
   output$value_sl <- renderUI({
-    rx_sl()
+    attr(rx_sl(), "value")
   })
 
   # ·· caption_sl ----
@@ -321,108 +361,26 @@ function(input, output, session) {
 
   # ·· bar_sl ----
   output$bar_sl <- renderPlotly({
-    # Get trends data
-    d <- d_sl |>
-      filter(station_id == sl_station_default) |>
-      mutate(
-        yr_grp = case_when(
-          year > input$sld_l_yr_split ~ "after",
-          TRUE                        ~ "before")) |>
-      group_by(yr_grp) |>
-      summarise(
-        year = mean(year),
-        avg = mean(msl)) |>
-      mutate(
-        period = factor(yr_grp, levels = c("before", "after")),  # Convert to factor with specific levels
-        value = ifelse(input$sw_imperial, avg / 2.54, avg))
 
-    # Create bar plot
-    show_splitbarplot(
-      d,
-      "period", "year", "value",
-      exploded = rx_exploded$sea_level,
-      source = "L",
-      label_template = "{year}: {value}") |>
-      event_register("plotly_click") |>
-      layout(clickmode = "event")
+    rx_sl() |>
+      ggplot(
+        aes(
+          x    = date_grp,
+          y    = rate,
+          fill = date_grp)) +
+      geom_col(alpha = 0.7) +
+      scale_fill_manual(
+        values = c("#00BFC4", "#F8766D")) +
+      ggplot2::theme(
+        axis.text       = element_text(size = 14),
+        axis.title      = ggplot2::element_blank(),
+        legend.position = "none")
+
   })
 
   # ·· click_sl ----
   observeEvent(event_data("plotly_click", "L"), {
     rx_exploded$sea_level <- !rx_exploded$sea_level
-  })
-
-  # * plot_sl ----
-  output$plot_sl <- renderPlotly({
-    # Split data by year and calculate trends
-    d <- d_sl |>
-      filter(station_id == input$sel_l_stn) |>
-      mutate(
-        yr_grp = case_when(
-          year > input$sld_l_yr_split  ~ "after",
-          TRUE                         ~ "before"))
-
-    # Calculate trends and stats for each period
-    trends <- d |>
-      group_by(yr_grp) |>
-      group_modify(~ {
-        m <- lm(msl ~ date, data = .)
-        rsq <- summary(m)$r.squared
-        cm_per_decade <- coef(m)[["date"]] * 100 * 365 * 10  # convert to cm/decade
-
-        # Convert units if imperial
-        rate <- ifelse(input$sw_imperial, cm_per_decade / 2.54, cm_per_decade)
-        unit <- ifelse(input$sw_imperial, "in/decade", "cm/decade")
-
-        # Create annotation text
-        text <- sprintf(
-          "%s: %0.2f %s\n(R² = %0.2f)",
-          .$yr_grp[1], rate, unit, rsq)
-
-        tibble(
-          date = range(.$date),
-          msl = predict(m, newdata = data.frame(date = range(.$date))),
-          text = text[1],
-          rate = rate,
-          rsq = rsq)
-      })
-
-    # Convert y-axis values if imperial
-    if (input$sw_imperial) {
-      d <- d |> mutate(msl = msl / 2.54)
-      trends <- trends |> mutate(msl = msl / 2.54)
-    }
-
-    # Create plot
-    p <- d |>
-      ggplot(aes(date, msl, color = yr_grp)) +
-      geom_point(alpha = 0.3) +
-      geom_line(data = trends, size = 1) +
-      scale_color_manual(
-        values = c("before" = "gray50", "after" = "red"),
-        name = "Period") +
-      labs(
-        x = "Year",
-        y = ifelse(input$sw_imperial, "Mean Sea Level (inches)", "Mean Sea Level (cm)"),
-        title = glue("Sea Level Rise at {sl_stations[input$sel_l_stn]}"))
-
-    # Add annotations
-    annotations <- trends |>
-      group_by(yr_grp) |>
-      slice_tail() |>
-      mutate(
-        x = date,
-        y = msl,
-        text = text,
-        showarrow = TRUE,
-        arrowhead = 2,
-        ax = 40,
-        ay = ifelse(yr_grp == "before", 40, -40))
-
-    p <- ggplotly(p) |>
-      layout(annotations = annotations)
-
-    p
   })
 
   # Air Temperature [t] ----
