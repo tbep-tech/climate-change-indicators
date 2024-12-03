@@ -634,6 +634,7 @@ function(input, output, session) {
         title = glue("Sea Level Rise at {stn}"))
 
     p <- ggplotly(p) |>
+      style(showlegend = F) |>
       add_annotations(
         x         = as.numeric(trends$date),
         y         = trends$msl,

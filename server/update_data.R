@@ -2,8 +2,8 @@
 
 # Update climate data for Tampa Bay
 
-log_txt <- "/var/log/climate_data_update.log"
-# log_txt <- here::here("tmp_log.txt") # DEBUG
+# log_txt <- "/var/log/climate_data_update.log"
+log_txt <- here::here("tmp_log.txt") # DEBUG
 
 log_message <- function(msg) {
   message   <- paste(
@@ -122,11 +122,11 @@ main <- function() {
   # Run each function with error handling
   lapply(names(update_fns), function(fn_name) {
     tryCatch({
-      log_message(glue("Starting {fn_name} step..."))
+      log_message(glue("Starting update: {fn_name}"))
       update_fns[[fn_name]]()
-      log_message(glue("Successfully completed {fn_name} step"))
+      log_message(glue("Successfully completed update: {fn_name}"))
     }, error = function(e) {
-      log_message(glue("Error in {fn_name} step: {conditionMessage(e)}"))
+      log_message(glue("Error updating {fn_name}: {conditionMessage(e)}"))
     })
   })
 
