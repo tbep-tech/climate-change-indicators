@@ -49,8 +49,8 @@ docker compose up -d
 
 The services will be available at:
 
-- Shiny app: https://climate.tbep.org/shiny/app/
-- RStudio: https://climate.tbep.org/rstudio/ (credentials: rstudio/rstudio)
+-   Shiny app: https://climate.tbep.org/shiny/app/
+-   RStudio: https://climate.tbep.org/rstudio/ (credentials: rstudio/rstudio)
 
 ## Development Workflow
 
@@ -60,10 +60,10 @@ The repository is mounted at `/share/github/tbep-tech/climate-change-indicators`
 
 Data updates are scheduled to run daily at midnight (UTC). The update process includes:
 
-- PRISM climate data
-- Sea level data
-- Sea Surface Temperature (SST) data
-- Hurricane tracking data
+-   PRISM climate data
+-   Sea level data
+-   Sea Surface Temperature (SST) data
+-   Hurricane tracking data
 
 To manually trigger a data update:
 
@@ -117,8 +117,8 @@ To implement this:
 
 Alternative solutions include:
 
-- Using AWS SNS for notifications
-- Slack webhooks
-- Monitoring services like Healthchecks.io
+-   Using AWS SNS for notifications
+-   Slack webhooks
+-   Monitoring services like Healthchecks.io
 
 Let me know if you'd like details on any of these alternatives.
