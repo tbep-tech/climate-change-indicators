@@ -1,9 +1,14 @@
 #!/usr/bin/env Rscript
 
+# Update climate data for Tampa Bay
+
+log_txt <- "/var/log/climate_data_update.log"
+# log_txt <- here::here("tmp_log.txt") # DEBUG
+
 log_message <- function(msg) {
-  timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-  message <- paste(timestamp, "-", msg)
-  cat(message, "\n", file = "/var/log/climate_data_update.log", append = TRUE)
+  message   <- paste(
+    format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "~", msg)
+  cat(message, "\n", file = log_txt, append = TRUE)
   cat(message, "\n") # Also print to console
 }
 
@@ -33,6 +38,7 @@ update_sea_level <- function() {
 }
 
 update_sst <- function() {
+
   dir_nc <- here("data/sst/tb_sst_nc")
   if (dir.exists(dir_nc))
     unlink(dir_nc, recursive = TRUE)

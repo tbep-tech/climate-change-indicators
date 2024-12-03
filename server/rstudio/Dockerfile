@@ -25,11 +25,8 @@ RUN mkdir -p /share/github/tbep-tech/climate-change-indicators/data \
     && chown -R shiny:shiny /share \
     && chown -R shiny:shiny /var/log
 
-# Set working directory
-WORKDIR /share/github/tbep-tech/climate-change-indicators
-
 # Copy environment variables if .env exists
-COPY --chown=shiny:shiny .env* /share/github/tbep-tech/climate-change-indicators/.env*
+COPY --chown=shiny:shiny .env* /share/github/tbep-tech/climate-change-indicators/server/.env*
 
 # Switch to shiny user
 USER shiny

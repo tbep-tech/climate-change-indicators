@@ -695,6 +695,7 @@ function(input, output, session) {
   output$plot_sst <- renderPlotly({
 
     d_sst_z |>
+      rename(val = mean) |>
       filter(
         bay_segment == input$sld_o_seg) |>
       plot_doy(
