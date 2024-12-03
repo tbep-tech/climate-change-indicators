@@ -573,22 +573,29 @@ function(input, output, session) {
 
     # Split data by year and calculate trends
     d <- d_sl |>
-      filter(station_id == input$sel_l_stn) |>
+      filter(
+        station_id == input$sel_l_stn,
+        !is.na(msl)) |>
       mutate(
         yr_grp = case_when(
           year > input$sld_l_yr_split  ~ "after",
           TRUE                         ~ "before"))
+    if (input$sw_imperial){
+      d$msl <- d$msl * 100 / 2.54  # m to in
+    } else {
+      d$msl <- d$msl * 100         # m to cm
+    }
 
     # Calculate trends and stats for each period
     trends <- d |>
       group_by(yr_grp) |>
       group_modify(~ {
-        m <- lm(msl ~ date, data = .)
-        rsq <- summary(m)$r.squared
-        cm_per_decade <- coef(m)[["date"]] * 100 * 365 * 10  # convert to cm/decade
+
+        mdl  <- lm(msl ~ date, data = .)
+        rsq  <- summary(mdl)$r.squared
+        rate <- coef(mdl)[["date"]] * 365 * 10  # convert to [cm|in]/decade
 
         # Convert units if imperial
-        rate <- ifelse(input$sw_imperial, cm_per_decade / 2.54, cm_per_decade)
         unit <- ifelse(input$sw_imperial, "in/decade", "cm/decade")
 
         # Create annotation text
@@ -597,47 +604,40 @@ function(input, output, session) {
           .$yr_grp[1], rate, unit, rsq)
 
         tibble(
-          date = range(.$date),
-          msl = predict(m, newdata = data.frame(date = range(.$date))),
-          text = text[1],
-          rate = rate,
-          rsq = rsq)
-      })
+          date = median(.$date),
+          msl  = predict(mdl, newdata = data.frame(date = median(.$date))),
+          text = text,
+          line = list(tibble(
+            date = range(.$date),
+            msl  = predict(mdl, newdata = data.frame(date = range(.$date))) )) )
+      }, .keep = T)
 
-    # Convert y-axis values if imperial
-    if (input$sw_imperial) {
-      d <- d |> mutate(msl = msl / 2.54)
-      trends <- trends |> mutate(msl = msl / 2.54)
-    }
 
     # Create plot
+    stn <- names(sl_stations)[sl_stations == input$sel_l_stn]
+
     p <- d |>
       ggplot(aes(date, msl, color = yr_grp)) +
       geom_point(alpha = 0.3) +
-      geom_line(data = trends, size = 1) +
+      geom_line(
+        data = trends |>
+          select(yr_grp, line) |>
+          unnest(cols = line), size = 1) +
       scale_color_manual(
-        values = c("before" = "gray50", "after" = "red"),
-        name = "Period") +
+        values = c("before" = "#00BFC4", "after" = "#F8766D"),
+        # show_splitbarplot(): @param bars_fill Fill color for bars (default: `c("#00BFC4", "#F8766D")`; teal and red)
+        # name = "Period",
+        guide = "none") +
       labs(
-        x = "Year",
+        x = "Date",
         y = ifelse(input$sw_imperial, "Mean Sea Level (inches)", "Mean Sea Level (cm)"),
-        title = glue("Sea Level Rise at {sl_stations[input$sel_l_stn]}"))
-
-    # Add annotations
-    annotations <- trends |>
-      group_by(yr_grp) |>
-      slice_tail() |>
-      mutate(
-        x = date,
-        y = msl,
-        text = text,
-        showarrow = TRUE,
-        arrowhead = 2,
-        ax = 40,
-        ay = ifelse(yr_grp == "before", 40, -40))
+        title = glue("Sea Level Rise at {stn}"))
 
     p <- ggplotly(p) |>
-      layout(annotations = annotations)
+      add_annotations(
+        x         = as.numeric(trends$date),
+        y         = trends$msl,
+        text      = trends$text)
 
     p
   })
@@ -716,7 +716,6 @@ function(input, output, session) {
   # * plot_h ----
   output$plot_h <- renderPlotly({
 
-    # browser()
     d <- h_d_sum |>
       select(year, scale_sum, label_md) |>
       mutate(
