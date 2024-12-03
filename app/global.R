@@ -1,15 +1,16 @@
-# TODO:
-# - [ ] landing: splash page
-# - [ ] tour: with cicero
-# - [ ] about: show sources for prism, sst, etc with About and links per card
-# - [ ] load: prep data so app loads faster
-# - [ ] performance: debounce() for slider inputs, like sld_t_md
-# - [ ] temp: option to select min/max/mean as sel_t_var
-# - [ ] sl: observe and update map_sl <-> plot_sl with click/select and highlight station in map_sl
-# - [ ] temp: heat index using dewpoint (`tdmean` -> humidity)
-# - [ ] download: data, static figures
+# TODO NOW:
+# - [ ] load: prep data so app loads faster; could use global.R to load data and save as RDS, or better to do so individually (see readr::read_rds())
+#   - [ ] performance: debounce() for slider inputs, like sld_t_md; see https://shiny.posit.co/r/reference/shiny/1.0.4/debounce.html
 # - [ ] maps: leaflet-proxy-map updates to layers so can zoom / pan without refresh
-# - [ ] prism: show `version`, `date_updated`
+# - [ ] sl: observe and update map_sl <-> plot_sl with click/select and highlight station in map_sl
+#
+# TODO LATER:
+# - [ ] temp: heat index using dewpoint (`tdmean` -> humidity)
+# - [ ] landing: splash page or Overview/Help
+#   - [ ] about: show sources for prism, sst, etc with About and links per card, info icon with modal; legal disclaimer
+#   - [ ] prism: show `version`, `date_updated`
+# - [ ] tour: with [cicero](https://cicerone.john-coene.com)
+# - [ ] download: data, static figures (plotly has option -- to highlight in About)
 
 # devtools::install_local(here::here("../tbeptools"), force = T)
 # devtools::load_all(here::here("../tbeptools"))

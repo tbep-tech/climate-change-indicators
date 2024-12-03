@@ -47,7 +47,10 @@ docker pull --platform linux/x86_64 rocker/geospatial  # for Mac
 docker compose up -d
 ```
 
-The services will be available at: - Shiny app: https://climate.tbep.org/shiny/app/ - RStudio: https://climate.tbep.org/rstudio/ (credentials: rstudio/rstudio)
+The services will be available at:
+
+- Shiny app: https://climate.tbep.org/shiny/app/
+- RStudio: https://climate.tbep.org/rstudio/ (credentials: rstudio/rstudio)
 
 ## Development Workflow
 
@@ -55,7 +58,12 @@ The repository is mounted at `/share/github/tbep-tech/climate-change-indicators`
 
 ### Data Updates
 
-Data updates are scheduled to run daily at midnight (UTC). The update process includes: - PRISM climate data - Sea level data - Sea Surface Temperature (SST) data - Hurricane tracking data
+Data updates are scheduled to run daily at midnight (UTC). The update process includes:
+
+- PRISM climate data
+- Sea level data
+- Sea Surface Temperature (SST) data
+- Hurricane tracking data
 
 To manually trigger a data update:
 
@@ -90,13 +98,11 @@ docker compose down
 -   Sensitive information is stored in `.env` file
 -   Git operations use secure token authentication
 
-
 ## Monitoring
 
 Using Claude.ai...
 
-PROMPT: What's an easy way to setup email or text notification upon getting any 
-errors in an update_data.R script from a cron job inside a docker container?
+PROMPT: What's an easy way to setup email or text notification upon getting any errors in an update_data.R script from a cron job inside a docker container?
 
 RESPONSE:
 
@@ -104,12 +110,13 @@ I'll create a simple monitoring solution using R and the `gmailr` package for em
 
 To implement this:
 
-1. Save this as `monitor.R` in your Docker container
-2. Setup Gmail OAuth credentials and save as `credentials.json`
-3. Update the cron job to run `Rscript monitor.R` instead of `update_data.R`
-4. For SMS, you can use email-to-SMS gateways (e.g., number@vtext.com for Verizon)
+1.  Save this as `monitor.R` in your Docker container
+2.  Setup Gmail OAuth credentials and save as `credentials.json`
+3.  Update the cron job to run `Rscript monitor.R` instead of `update_data.R`
+4.  For SMS, you can use email-to-SMS gateways (e.g., number\@vtext.com for Verizon)
 
 Alternative solutions include:
+
 - Using AWS SNS for notifications
 - Slack webhooks
 - Monitoring services like Healthchecks.io
