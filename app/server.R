@@ -612,10 +612,10 @@ function(input, output, session) {
             msl  = predict(mdl, newdata = data.frame(date = range(.$date))) )) )
       }, .keep = T)
 
-
-    # Create plot
+    # Station name
     stn <- names(sl_stations)[sl_stations == input$sel_l_stn]
 
+    # Create ggplot
     p <- d |>
       ggplot(aes(date, msl, color = yr_grp)) +
       geom_point(alpha = 0.3) +
@@ -625,14 +625,13 @@ function(input, output, session) {
           unnest(cols = line), size = 1) +
       scale_color_manual(
         values = c("before" = "#00BFC4", "after" = "#F8766D"),
-        # show_splitbarplot(): @param bars_fill Fill color for bars (default: `c("#00BFC4", "#F8766D")`; teal and red)
-        # name = "Period",
         guide = "none") +
       labs(
         x = "Date",
         y = ifelse(input$sw_imperial, "Mean Sea Level (inches)", "Mean Sea Level (cm)"),
         title = glue("Sea Level Rise at {stn}"))
 
+    # Create plotly
     p <- ggplotly(p) |>
       style(showlegend = F) |>
       add_annotations(

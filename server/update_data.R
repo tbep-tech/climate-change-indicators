@@ -56,17 +56,21 @@ update_sst <- function() {
 
 update_hurricane <- function() {
   url  <- "https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r01/access/netcdf/IBTrACS.NA.v04r01.nc"
-  file <- here("data/storms", basename(url))
+  tmp  <- tempfile(fileext = ".nc")
+  nc   <- here("data/storms", basename(url))
 
   resp <- curl::multi_download(
     urls          = url,
-    destfile      = file,
+    destfile      = tmp,
     timecondition = 1,
     timevalue     = as.numeric(file.info(file)$mtime),
     progress      = F)
 
   if (!resp$success)
     stop(resp$error)
+
+  file.copy(tmp, nc, overwrite = T)
+  unlink(tmp)
 }
 
 update_prism <- function() {
