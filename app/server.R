@@ -30,8 +30,7 @@ function(input, output, session) {
 
   # ·· rx_temp ----
   rx_temp <- reactive({
-    # Debounce the date split input to prevent excessive recalculation
-    date_split <- debounce(reactive(input$sld_date_split), 300)()
+    date_split      <- input$sld_date_split
     show_isImperial <- input$sw_imperial
     show_units      <- ifelse(show_isImperial, "°F", "°C")
 
@@ -62,7 +61,8 @@ function(input, output, session) {
        {format(date_split, '%b %e')}.")
 
     d
-  })
+  }) # |>
+    # debounce(rx_wait)
 
   # ·· value_temp ----
   output$value_temp <- renderUI({
@@ -96,14 +96,15 @@ function(input, output, session) {
   # ·· rx_rain ----
   rx_rain <- reactive({
     # varies with input$sw_imperial, input$sld_date_split
-
     # DEBUG: input <- list(sw_imperial=T, sld_date_split=as.Date("2023-11-20"))
+
+    date_split      <- input$sld_date_split
     show_isImperial <- input$sw_imperial
     show_units      <- ifelse(show_isImperial, "in", "mm")
 
     d <- anlz_splitdata(
       d_rain,
-      input$sld_date_split,
+      date_split,
       date_col  = "date",
       value_col = "value") |>
       mutate(
@@ -124,11 +125,12 @@ function(input, output, session) {
     attr(d, "caption") <- glue(
       "The annual average rainfall has been
        {ifelse(v > 0, 'wetter', 'drier')} by {abs(v)} {show_units}
-       since {format(input$sld_date_split, '%Y')} with years split around
-       {format(input$sld_date_split, '%b %e')}.")
+       since {format(date_split, '%Y')} with years split around
+       {format(date_split, '%b %e')}.")
 
     d
-  })
+  }) # |>
+    # debounce(rx_wait)
 
   # ·· value_rain ----
   output$value_rain <- renderUI({
@@ -161,8 +163,8 @@ function(input, output, session) {
 
   # ·· rx_sst ----
   rx_sst <- reactive({
-    # Debounce the date input
-    date_split <- debounce(reactive(input$sld_date_split), 300)()
+
+    date_split      <- input$sld_date_split
     show_isImperial <- input$sw_imperial
     show_units      <- ifelse(show_isImperial, "°F", "°C")
 
@@ -193,7 +195,8 @@ function(input, output, session) {
        {format(date_split, '%b %e')}.")
 
     d
-  })
+  }) # |>
+    # debounce(rx_wait)
 
   # ·· value_sst ----
   output$value_sst <- renderUI({
@@ -226,7 +229,10 @@ function(input, output, session) {
 
   # ·· rx_hurricanes ----
   rx_hurricanes <- reactive({
-    d <- anlz_splitstorms(h_d, input$sld_date_split)
+
+    date_split <- input$sld_date_split
+
+    d <- anlz_splitstorms(h_d, date_split)
 
     # calculate difference after - before for caption and value
     v <- d |>
@@ -242,11 +248,12 @@ function(input, output, session) {
     attr(d, "caption") <- glue(
       "The annual average sum of hurricane categories (cat) has
       {ifelse(v > 0, 'increased','decreased')} by {v}
-       since {format(input$sld_date_split, '%Y')} with years split around
-       {format(input$sld_date_split, '%b %e')}.")
+       since {format(date_split, '%Y')} with years split around
+       {format(date_split, '%b %e')}.")
 
     d
-  })
+  }) # |>
+    # debounce(rx_wait)
 
   # ·· value_hurricanes ----
   output$value_hurricanes <- renderUI({
@@ -280,6 +287,8 @@ function(input, output, session) {
   # ·· rx_sl ----
   rx_sl <- reactive({
 
+    date_split <- input$sld_date_split
+
     # Split data by date and default station
     d <- d_sl |>
       filter(
@@ -288,8 +297,8 @@ function(input, output, session) {
       mutate(
         date_grp = factor(
           case_when(
-          date > input$sld_date_split ~ "after",
-          TRUE                        ~ "before"),
+          date > date_split ~ "after",
+          TRUE              ~ "before"),
           ordered = T,
           levels = c("before", "after")))
     # table(d$date_grp)
@@ -342,10 +351,11 @@ function(input, output, session) {
     attr(d, "caption") <- glue(
       "Sea level rise ({units}) has
       {ifelse(v > 0, 'increased','decreased')} by {v}
-       since {format(input$sld_date_split, '%Y-%m-%d')} at {names(sl_station_default)}.")
+       since {format(date_split, '%Y-%m-%d')} at {names(sl_station_default)}.")
 
     d
-  })
+  }) # |>
+    # debounce(rx_wait)
 
   # ·· value_sl ----
   output$value_sl <- renderUI({
@@ -374,11 +384,6 @@ function(input, output, session) {
         axis.title      = ggplot2::element_blank(),
         legend.position = "none")
 
-  })
-
-  # ·· click_sl ----
-  observeEvent(event_data("plotly_click", "L"), {
-    rx_exploded$sea_level <- !rx_exploded$sea_level
   })
 
   # Air Temperature [t] ----
@@ -430,7 +435,8 @@ function(input, output, session) {
       lgnd_now,
       var_lbl)
 
-  })
+  }) # |>
+    # debounce(rx_wait)
 
   # * plot_temp ----
   output$plot_temp <- renderPlotly({
@@ -444,7 +450,8 @@ function(input, output, session) {
       select(time, val = mean) |>
       plot_doy(
         days_smooth = input$sld_t_days_smooth)
-  })
+  }) # |>
+    # debounce(rx_wait)
 
   # Rain [r] ----
 
@@ -578,7 +585,7 @@ function(input, output, session) {
       geom_line(
         data = trends |>
           select(yr_grp, line) |>
-          unnest(cols = line), size = 1) +
+          unnest(cols = line), linewidth = 1) +
       scale_color_manual(
         values = c("before" = "#00BFC4", "after" = "#F8766D"),
         guide = "none") +

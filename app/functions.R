@@ -23,6 +23,13 @@ get_sst_r <- function(dates){  # dates = dates_then
     project(leaflet:::epsg3857)
 }
 
+h_filt_yrs <- function(st, yrs){
+  st_yrs <- getSeasons(st) |> as.numeric()
+  i_yrs <- st_yrs >= yrs[1] & st_yrs <= yrs[2]
+  st@data <- st@data[i_yrs]
+  st
+}
+
 map_sl <- function(
     dark_mode = T){
 
@@ -150,7 +157,8 @@ plot_doy <- function(
     size_lastyear    = 1,
     size_otheryears  = 0.5,
     alpha_otheryears = 0.5,
-    interactive      = T){
+    interactive      = T,
+    ylab             = "Value"){
 
   # DEBUG:
   # df = d_temp; days_smooth = 7
@@ -230,20 +238,20 @@ plot_doy <- function(
       data = d_doy_oth,
       aes(x = doy, y = val),
       color = color_otheryears,
-      size  = size_otheryears) +
+      linewidth  = size_otheryears) +
     geom_line(
       data = d_doy_tl |> filter(grp == "last"),
       aes(x = doy, y = val),
       color = color_lastyear,
-      size  = size_lastyear) +
+      linewidth  = size_lastyear) +
     geom_line(
       data = d_doy_tl |> filter(grp == "this"),
       aes(x = doy, y = val),
       color = color_thisyear,
-      size  = size_thisyear) +
+      linewidth  = size_thisyear) +
     labs(
       x = "Day of Year",
-      y = "Value") +
+      y = ylab) +
     scale_x_continuous(
       breaks = seq(1, 365, 30),
       labels = function(x) format(as.Date(x, origin = "2000-01-01"), "%b %d"))
