@@ -1,6 +1,4 @@
 # TODO NOW:
-# - [x] load: prep data so app loads faster; could use global.R to load data and save as RDS, or better to do so individually (see readr::read_rds())
-#   - [x] performance: debounce() for slider inputs, like sld_t_md; see https://shiny.posit.co/r/reference/shiny/1.0.4/debounce.html
 # - [ ] maps: leaflet-proxy-map updates to layers so can zoom / pan without refresh
 # - [ ] sl: observe and update map_sl <-> plot_sl with click/select and highlight station in map_sl
 #
