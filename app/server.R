@@ -30,15 +30,14 @@ function(input, output, session) {
 
   # ·· rx_temp ----
   rx_temp <- reactive({
-    # varies with input$sw_imperial, input$sld_date_split
-
-    # DEBUG: input <- list(sw_imperial=T, sld_date_split=as.Date("2023-11-20"))
+    # Debounce the date split input to prevent excessive recalculation
+    date_split <- debounce(reactive(input$sld_date_split), 300)()
     show_isImperial <- input$sw_imperial
     show_units      <- ifelse(show_isImperial, "°F", "°C")
 
     d <- anlz_splitdata(
       d_temp,
-      input$sld_date_split,
+      date_split,
       date_col  = "date",
       value_col = "value") |>
       mutate(
@@ -59,8 +58,8 @@ function(input, output, session) {
     attr(d, "caption") <- glue(
       "The annual average temperature has
        {ifelse(v > 0, 'increased', 'decreased')} by {abs(v)} {show_units}
-       since {format(input$sld_date_split, '%Y')} with years split around
-       {format(input$sld_date_split, '%b %e')}.")
+       since {format(date_split, '%Y')} with years split around
+       {format(date_split, '%b %e')}.")
 
     d
   })
@@ -162,15 +161,14 @@ function(input, output, session) {
 
   # ·· rx_sst ----
   rx_sst <- reactive({
-    # varies with input$sw_imperial, input$sld_date_split
-
-    # DEBUG: input <- list(sw_imperial=T, sld_date_split=as.Date("2023-11-20"))
+    # Debounce the date input
+    date_split <- debounce(reactive(input$sld_date_split), 300)()
     show_isImperial <- input$sw_imperial
     show_units      <- ifelse(show_isImperial, "°F", "°C")
 
     d <- anlz_splitdata(
       d_sst,
-      input$sld_date_split,
+      date_split,
       date_col  = "date",
       value_col = "value") |>
       mutate(
@@ -191,8 +189,8 @@ function(input, output, session) {
     attr(d, "caption") <- glue(
       "The annual average ocean temperature has
        {ifelse(v > 0, 'increased', 'decreased')} by {abs(v)} {show_units}
-       since {format(input$sld_date_split, '%Y')} with years split around
-       {format(input$sld_date_split, '%b %e')}.")
+       since {format(date_split, '%Y')} with years split around
+       {format(date_split, '%b %e')}.")
 
     d
   })
