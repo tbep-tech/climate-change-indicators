@@ -16,13 +16,19 @@ function(input, output, session) {
   })
 
   # rx_vals ----
-  # Reactive values to track which boxes are exploded
+  # track which boxes are exploded
   rx_exploded <- reactiveValues(
     hurricanes  = F,
-    temperature = F,
     rain        = F,
+    sea_level   = F,
     sst         = F,
-    sea_level   = F)
+    temperature = F,
+    map_sst_init = F)
+  # track which maps initiated to observe and update rasters after
+  rx_map_init <- reactiveValues(
+    rain = F,
+    sst  = F,
+    temp = F)
 
   # Overview ----
 
@@ -390,53 +396,24 @@ function(input, output, session) {
 
   # * map_temp ----
   output$map_temp <- renderLeaflet({
+    rx_map_init$temp <- T
+    map_init()
+  })
 
-    # DEBUG
-    # input <- list(
-    #   sld_md       = as.Date("2024-07-22"),
-    #   sld_yrs_now  = c(2024, 2024),
-    #   sld_yrs_then = c(1981, 2001))
+  # * ∆ map_temp rasters ----
+  observe({
+    req(rx_map_init$temp)
 
-    var        = "tmax"
-    var_lbl    = "Temperature (°C)"
-    md         = format(input$sld_t_md, "%m-%d")
-    yrs_now    = input$sld_t_yrs_now[1]:input$sld_t_yrs_now[2]
-    yrs_then   = input$sld_t_yrs_then[1]:input$sld_t_yrs_then[2]
-    dates_now  = as.Date(glue("{yrs_now}-{md}"))
-    dates_then = as.Date(glue("{yrs_then}-{md}"))
-
-    if (any(dates_now > now_prism))
-      dates_now[dates_now > now_prism] <- dates_now[dates_now > now_prism] - years(1)
-
-    yrs_now_rng  <- year(dates_now)
-    yrs_then_rng <- year(dates_then)
-    if (length(yrs_now_rng) > 2)
-      yrs_now_rng <- range(yrs_now_rng)
-    if (length(yrs_then_rng) > 2)
-      yrs_then_rng <- range(yrs_then_rng)
-
-    r_now  <- get_prism_r(dates_now,  var)
-    r_then <- get_prism_r(dates_then, var)
-
-    lgnd_now <- glue(
-      "<b>Now</b><br>
-          {format(input$sld_t_md, '%b %d')},
-          {paste(yrs_now_rng, collapse = ' to ')}")
-    lgnd_then <- glue(
-      "<b>Then</b><br>
-           {format(input$sld_t_md, '%b %d')},
-           {paste(yrs_then_rng, collapse = ' to ')}")
-
-    map_then_now(
-      r_then,
-      r_now,
-      dark_mode = isTRUE(input$sw_dark),
-      lgnd_then,
-      lgnd_now,
-      var_lbl)
-
-  }) # |>
-    # debounce(rx_wait)
+    leafletProxy("map_temp") |>
+      map_update_basemap(input$sw_dark) |>
+      map_update_polys(input$sw_dark) |>
+      map_update_rasters(
+        var         = input$sel_t_var,
+        md          = format(input$sld_t_md, "%m-%d"),
+        yrs_now     = input$sld_t_yrs_now[1]:input$sld_t_yrs_now[2],
+        yrs_then    = input$sld_t_yrs_then[1]:input$sld_t_yrs_then[2],
+        is_imperial = input$sw_imperial)
+  })
 
   # * plot_temp ----
   output$plot_temp <- renderPlotly({
@@ -457,54 +434,23 @@ function(input, output, session) {
 
   # * map_rain ----
   output$map_rain <- renderLeaflet({
+    rx_map_init$rain <- T
+    map_init()
+  })
 
-    var        = "pptytd"
-    var_lbl    = "Rain (mm)<br>year to date"
+  # * ∆ map_rain ----
+  observe({
+    req(rx_map_init$rain)
 
-    # DEBUG
-    # input = list(
-    #   sld_r_md       = as.Date("2024-10-07"),
-    #   sld_r_yrs_now  = c(2024, 2024),
-    #   sld_r_yrs_then = c(1981, 2001))
-
-    md         = format(input$sld_r_md, "%m-%d")
-    yrs_now    = input$sld_r_yrs_now[1]:input$sld_r_yrs_now[2]
-    yrs_then   = input$sld_r_yrs_then[1]:input$sld_r_yrs_then[2]
-    dates_now  = as.Date(glue("{yrs_now}-{md}"))
-    dates_then = as.Date(glue("{yrs_then}-{md}"))
-
-    if (any(dates_now > now_prism))
-      dates_now[dates_now > now_prism] <- dates_now[dates_now > now_prism] - years(1)
-
-    yrs_now_rng  <- year(dates_now)
-    yrs_then_rng <- year(dates_then)
-    if (length(yrs_now_rng) > 2)
-      yrs_now_rng <- range(yrs_now_rng)
-    if (length(yrs_then_rng) > 2)
-      yrs_then_rng <- range(yrs_then_rng)
-
-    r_now  <- get_prism_r(dates_now,  var)
-    r_then <- get_prism_r(dates_then, var)
-
-    lgnd_now <- glue(
-      "<b>Now</b><br>
-          {format(input$sld_r_md, '%b %d')},
-          {paste(yrs_now_rng, collapse = ' to ')}")
-    lgnd_then <- glue(
-      "<b>Then</b><br>
-           {format(input$sld_r_md, '%b %d')},
-           {paste(yrs_then_rng, collapse = ' to ')}")
-
-    map_then_now(
-      r_then,
-      r_now,
-      dark_mode = isTRUE(input$sw_dark),
-      lgnd_then,
-      lgnd_now,
-      var_lbl,
-      palette     = "Blues",
-      palette_rev = F)
-
+    leafletProxy("map_rain") |>
+      map_update_basemap(input$sw_dark) |>
+      map_update_polys(input$sw_dark) |>
+      map_update_rasters(
+        var         = "pptytd",
+        md          = format(input$sld_r_md, "%m-%d"),
+        yrs_now     = input$sld_r_yrs_now[1]:input$sld_r_yrs_now[2],
+        yrs_then    = input$sld_r_yrs_then[1]:input$sld_r_yrs_then[2],
+        is_imperial = input$sw_imperial)
   })
 
   # * plot_rain ----
@@ -609,49 +555,24 @@ function(input, output, session) {
 
   # * map_sst ----
   output$map_sst <- renderLeaflet({
+    rx_map_init$sst <- T
+    map_init()
+  })
 
-    # DEBUG
-    # input <- list(
-    #   sld_o_md       = as.Date("2024-07-22"),
-    #   sld_o_yrs_now  = c(2024, 2024),
-    #   sld_o_yrs_then = c(1981, 2001))
+  # * ∆ map_sst ----
+  observe({
+    req(rx_map_init$sst)
 
-    var_lbl    = "Sea Surface Temperature (°C)"
-    md         = format(input$sld_o_md, "%m-%d")
-    yrs_now    = input$sld_o_yrs_now[1]:input$sld_o_yrs_now[2]
-    yrs_then   = input$sld_o_yrs_then[1]:input$sld_o_yrs_then[2]
-    dates_now  = as.Date(glue("{yrs_now}-{md}"))
-    dates_then = as.Date(glue("{yrs_then}-{md}"))
-
-    if (any(dates_now > now_sst))
-      dates_now[dates_now > now_sst] <- dates_now[dates_now > now_sst] - years(1)
-
-    yrs_now_rng  <- year(dates_now)
-    yrs_then_rng <- year(dates_then)
-    if (length(yrs_now_rng) > 2)
-      yrs_now_rng <- range(yrs_now_rng)
-    if (length(yrs_then_rng) > 2)
-      yrs_then_rng <- range(yrs_then_rng)
-
-    r_now  <- get_sst_r(dates_now)
-    r_then <- get_sst_r(dates_then)
-
-    lgnd_now <- glue(
-      "<b>Now</b><br>
-          {format(input$sld_o_md, '%b %d')},
-          {paste(yrs_now_rng, collapse = ' to ')}")
-    lgnd_then <- glue(
-      "<b>Then</b><br>
-           {format(input$sld_o_md, '%b %d')},
-           {paste(yrs_then_rng, collapse = ' to ')}")
-
-    map_then_now(
-      r_then,
-      r_now,
-      dark_mode = isTRUE(input$sw_dark),
-      lgnd_then,
-      lgnd_now,
-      var_lbl)
+    leafletProxy("map_sst") |>
+      map_update_basemap(input$sw_dark) |>
+      map_update_polys(input$sw_dark) |>
+      map_update_rasters(
+        var         = "sst",
+        data        = "sst",
+        md          = format(input$sld_o_md, "%m-%d"),
+        yrs_now     = input$sld_o_yrs_now[1]:input$sld_o_yrs_now[2],
+        yrs_then    = input$sld_o_yrs_then[1]:input$sld_o_yrs_then[2],
+        is_imperial = input$sw_imperial)
   })
 
   # * plot_sst ----

@@ -84,9 +84,9 @@ page_navbar(
             selectInput(
               "sel_t_var",
               "Variable",
-              c("Max"     = "tmax",
-                "Average" = "tmean",
-                "Min"     = "tmin"),
+              c("Min"     = "tmin",
+                # TODO: Average = tmean = mean(tmin, tmax)
+                "Max"     = "tmax"),
               selected = "tmax"),
 
             sliderInput(
