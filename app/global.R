@@ -1,8 +1,5 @@
 # TODO LATER:
 # - [ ] temp: heat index using dewpoint (`tdmean` -> humidity)
-# - [ ] landing: splash page or Overview/Help
-#   - [ ] about: show sources for prism, sst, etc with About and links per card, info icon with modal; legal disclaimer
-#   - [ ] prism: show `version`, `date_updated`
 # - [ ] tour: with [cicero](https://cicerone.john-coene.com)
 # - [ ] download: data, static figures (plotly has option -- to highlight in About)
 
