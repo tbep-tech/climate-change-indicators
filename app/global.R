@@ -1,7 +1,3 @@
-# TODO NOW:
-# - [ ] sl: observe and update map_sl <-> plot_sl with click/select and highlight station in map_sl
-# - [ ] suspend maps/plots until given tab is selected
-# - profvis::profvis({ shiny::runApp() })
 # TODO LATER:
 # - [ ] temp: heat index using dewpoint (`tdmean` -> humidity)
 # - [ ] landing: splash page or Overview/Help

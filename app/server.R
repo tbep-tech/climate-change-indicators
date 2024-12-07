@@ -27,6 +27,7 @@ function(input, output, session) {
   # track which maps initiated to observe and update rasters after
   rx_map_init <- reactiveValues(
     rain = F,
+    sl   = F,
     sst  = F,
     temp = F)
 
@@ -474,7 +475,39 @@ function(input, output, session) {
 
   # * map_sl ----
   output$map_sl <- renderLeaflet({
+    rx_map_init$sl <- T
     map_sl()
+  })
+
+  # * ∆ map_sl ----
+  observe({
+    req(rx_map_init$sl)
+    req(input$sel_l_stn)
+
+    leafletProxy("map_sl")  |>
+      clearGroup("highlighted") |>
+      addCircleMarkers(
+        data = tbeptools::sealevelstations |>
+          filter(
+            station_id == input$sel_l_stn),
+        lng     = ~longitude,
+        lat     = ~latitude,
+        layerId = ~station_id,
+        group = "highlighted",
+        color = "yellow",
+        fillColor = "yellow",
+        radius = 8,
+        weight = 2,
+        opacity = 1,
+        fillOpacity = 0.5)
+  })
+
+  # * observe map_sl clicks ----
+  observeEvent(input$map_sl_marker_click, {
+    click <- input$map_sl_marker_click
+    if (!is.null(click$id)) {
+      updateSelectInput(session, "sel_l_stn", selected = click$id)
+    }
   })
 
   # * plot_sl ----

@@ -8,6 +8,7 @@ options(readr.show_col_types = F)
 set.seed(42)
 
 dir_cache    <- here("data/cache")
+dir.create(dir_cache, showWarnings = F)
 
 savevars_rds <- function(vars){
   for (var in vars)
