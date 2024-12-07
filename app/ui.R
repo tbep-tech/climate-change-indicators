@@ -3,10 +3,51 @@ page_navbar(
   title = "Tampa Bay Climate Change Indicators",
   theme = dark,
 
+  # Info [i] ----
+  nav_panel(
+    title = tagList(
+      bs_icon("info-circle-fill"), "Info"),
+    p("Welcome to the Tampa Bay Climate Change Indicators dashboard. This dashboard
+    provides an overview of climate change indicators for Tampa Bay, Florida. The
+    dashboard is intended to provide a snapshot of climate change indicators in
+    Tampa Bay and to help inform decision-making and planning for climate change
+    adaptation and mitigation."),
+    p("To learn more about each of the data sources, click on the descriptions
+      below... "),
+    accordion(
+      accordion_panel(
+        "Air Temperature",
+        icon = bs_icon("thermometer-half"),
+        includeMarkdown("temp.md")
+      ),
+      accordion_panel(
+        "Rainfall",
+        icon = bs_icon("cloud-rain-fill"),
+        includeMarkdown("rain.md")
+      ),
+      accordion_panel(
+        "Sea Level",
+        icon = bs_icon("water"),
+        includeMarkdown("sl.md")
+      ),
+      accordion_panel(
+        "Ocean Temperature",
+        icon = bs_icon("thermometer-low"),
+        includeMarkdown("sst.md")
+      ),
+      accordion_panel(
+        "Hurricanes",
+        icon = bs_icon("tornado"),
+        includeMarkdown("hurricanes.md")
+      )
+    )
+  ),
+
   # Overview [v] ----
   nav_panel(
     title = tagList(
       bs_icon("compass-fill"), "Overview"),
+    value = "nav_overview",
 
     sliderInput(
       "sld_date_split",
