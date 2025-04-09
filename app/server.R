@@ -87,8 +87,7 @@ function(input, output, session) {
       show_splitbarplot(
         "period", "year", "avg",
         exploded       = rx_exploded$temperature,
-        source         = "T",
-        label_template = "{year}: {value}") |>
+        source         = "T") |>
       event_register("plotly_click") |>
       layout(clickmode = "event")
   })
@@ -155,8 +154,7 @@ function(input, output, session) {
       show_splitbarplot(
         "period", "year", "avg",
         exploded       = rx_exploded$rain,
-        source         = "R",
-        label_template = "{year}: {value}") |>
+        source         = "R") |>
       event_register("plotly_click") |>
       layout(clickmode = "event")
   })
@@ -221,8 +219,7 @@ function(input, output, session) {
       show_splitbarplot(
         "period", "year", "avg",
         exploded       = rx_exploded$sst,
-        source         = "S",
-        label_template = "{year}: {value}") |>
+        source         = "S") |>
       event_register("plotly_click") |>
       layout(clickmode = "event")
   })
@@ -278,8 +275,7 @@ function(input, output, session) {
       show_splitbarplot(
         "period", "year", "sum",
         exploded       = rx_exploded$hurricanes,
-        source         = "H",
-        label_template = "{year}: {value}") |>
+        source         = "H") |>
       event_register("plotly_click") |>
       layout(clickmode = "event")
   })
