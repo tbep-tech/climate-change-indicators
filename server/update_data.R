@@ -15,8 +15,9 @@ log_message <- function(msg) {
 # Load packages ----
 log_message("Loading packages...")
 librarian::shelf(
-  curl, dplyr, marinebon/extractr, gert, glue, here, lubridate, sf,
-  tbeptech/tbeptools,
+  curl, dplyr, gert, glue, here, lubridate, sf,
+  tbep-tech/tbeptools,
+  tbep-tech/extractr,
   quiet = TRUE)
 
 # Setup variables ----
@@ -63,7 +64,7 @@ update_hurricane <- function() {
     urls          = url,
     destfile      = tmp,
     timecondition = 1,
-    timevalue     = as.numeric(file.info(file)$mtime),
+    timevalue     = as.numeric(file.info(nc)$mtime),
     progress      = F)
 
   if (!resp$success)

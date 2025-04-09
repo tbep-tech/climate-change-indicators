@@ -15,8 +15,8 @@ RUN install2.r --error \
     purrr RColorBrewer readr sf stringr terra tidyr webshot2
 
 # Install GitHub packages
-RUN installGithub.r marinebon/extractr
-RUN R -e "remotes::install_github('tbep-tech/tbeptools@climate-change-indicators')"
+RUN installGithub.r tbep-tech/extractr # original from marinebon/extractr, our version includes a fix
+RUN installGithub.r tbep-tech/tbeptools # R -e "remotes::install_github('tbep-tech/tbeptools')"
 
 # Create required directories with appropriate permissions
 RUN mkdir -p /share/github/tbep-tech/climate-change-indicators/data \
