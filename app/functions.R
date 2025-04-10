@@ -88,11 +88,7 @@ map_init <- function(
     map <- map |>
       addMapPane("pn_left",  zIndex = 450) |>
       addMapPane("pn_right", zIndex = 450) |>
-      map_update_basemap(is_swiping = T) |>
-      addSidebyside(
-        layerId = "swiper",
-        leftId  = "lyr_base_left",
-        rightId = "lyr_base_right")
+      map_update_basemap(is_swiping = T)
   } else {
     map <- map |>
       map_update_basemap(dark_mode, is_swiping = F)
@@ -124,7 +120,11 @@ map_update_basemap <- function(
         layerId = "lyr_base_right",
         options = pathOptions(
           pane = "pn_right"),
-        ...)
+        ...) |>
+      addSidebyside(
+        layerId = "swiper",
+        leftId  = "lyr_base_left",
+        rightId = "lyr_base_right")
   } else {
     map <- map |>
       addProviderTiles(
