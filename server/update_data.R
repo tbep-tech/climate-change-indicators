@@ -61,11 +61,9 @@ update_hurricane <- function() {
   nc   <- here("data/storms", basename(url))
 
   resp <- curl::multi_download(
-    urls          = url,
-    destfile      = tmp,
-    timecondition = 1,
-    timevalue     = as.numeric(file.info(nc)$mtime),
-    progress      = F)
+    urls = url,
+    destfile = tmp,
+    progress = TRUE)
 
   if (!resp$success)
     stop(resp$error)
@@ -134,6 +132,9 @@ main <- function() {
       log_message(glue("Error updating {fn_name}: {conditionMessage(e)}"))
     })
   })
+
+  log_message("Updating app cache")
+  source(here("app/prep_cache.R"))
 
   log_message("Data update process completed")
 }
