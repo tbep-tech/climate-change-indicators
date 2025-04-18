@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   rstudio:
-    build: 
+    build:
       context: ./rstudio
     container_name: rstudio
     volumes:
@@ -18,8 +18,8 @@ services:
     image: caddy:2
     container_name: caddy
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"
+      - "8443:443"
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
