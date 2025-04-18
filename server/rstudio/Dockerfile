@@ -6,6 +6,7 @@ RUN /rocker_scripts/install_shiny_server.sh
 # Install system dependencies for Git
 RUN apt-get update && apt-get install -y \
     git \
+    cron \
     libgit2-dev \
     && rm -rf /var/lib/apt/lists/*
 
